@@ -5,6 +5,7 @@ import { shell } from './shell';
 import { bubble } from './bubble';
 import { quick } from './quick';
 import { selection } from './selection';
+import { heap } from './heap';
 
 export function registerBuiltinAlgorithms(): void {
   registerAlgorithm(insertion);
@@ -13,4 +14,5 @@ export function registerBuiltinAlgorithms(): void {
   registerAlgorithm(bubble);
   registerAlgorithm(quick);
   registerAlgorithm(selection);
+  registerAlgorithm(heap);
 }
