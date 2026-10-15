@@ -16,6 +16,8 @@ export interface Step {
   note?: string;
   snapshot?: number[];
   stats?: Partial<Stats>;
+  /** 该步骤执行时的关键变量值（算法按需带出；replay 会累积进 ViewState.vars） */
+  vars?: Record<string, number>;
 }
 
 export function compareStep(i: number, j: number, codeLine: number, note: string): Step {
@@ -54,4 +56,9 @@ export function noteStep(note: string, codeLine: number): Step {
 
 export function passEndStep(snapshot: number[], codeLine: number, note: string): Step {
   return { kind: 'passEnd', snapshot: [...snapshot], codeLine, note };
+}
+
+/** 给任一步骤附加变量值：`steps.push(withVars(compareStep(...), { i, j }))` */
+export function withVars(step: Step, vars: Record<string, number>): Step {
+  return { ...step, vars: { ...vars } };
 }

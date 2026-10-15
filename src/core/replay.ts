@@ -14,6 +14,11 @@ export interface ViewState {
   sorted: Set<number>;
   lastNote: string;
   lastCodeLine: number;
+  /**
+   * 累积各步骤带出的变量值：每步 step.vars 浅合并进来，同名键后写覆盖先写。
+   * 没有算法发 vars 时是空对象（始终存在，不会是 null）。
+   */
+  vars: Record<string, number>;
 }
 
 /** 一趟（外层循环一轮）结束时的数据快照 */
@@ -23,6 +28,7 @@ export function createViewState(data: number[]): ViewState {
   return {
     data: [...data], marks: new Map(), callStack: [], heapSize: null,
     aux: null, activeIndices: [], sorted: new Set(), lastNote: '', lastCodeLine: 0,
+    vars: {},
   };
 }
 
@@ -39,6 +45,7 @@ export function applyStep(state: ViewState, step: Step): ViewState {
     sorted: new Set(state.sorted),
     aux: state.aux ? [...state.aux] : null,
     activeIndices: [],
+    vars: { ...state.vars },
   };
 
   switch (step.kind) {
@@ -93,6 +100,8 @@ export function applyStep(state: ViewState, step: Step): ViewState {
   // 只有「带值」的步骤才刷新底部解说与代码行高亮
   if (step.note !== undefined) next.lastNote = step.note;
   if (step.codeLine !== undefined) next.lastCodeLine = step.codeLine;
+  // 带 vars 的步骤把变量值累积进状态（浅合并、同名键后写覆盖先写；不改动原 step 对象）
+  if (step.vars) next.vars = { ...next.vars, ...step.vars };
   return next;
 }
 

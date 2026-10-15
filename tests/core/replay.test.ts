@@ -1,7 +1,12 @@
 import { replay, createViewState, applyStep, deriveStats, derivePasses } from '../../src/core/replay';
-import { compareStep, swapStep, assignStep, markStep, unmarkStep, auxWriteStep, passEndStep } from '../../src/core/step';
+import { compareStep, swapStep, assignStep, markStep, unmarkStep, auxWriteStep, passEndStep, withVars } from '../../src/core/step';
 
 const DATA = [49, 38, 65];
+const VARS_STEPS = [
+  withVars(compareStep(0, 1, 1, 'a'), { i: 0, j: 1 }),
+  withVars(compareStep(1, 2, 1, 'b'), { i: 1 }),
+  compareStep(0, 2, 1, 'c'),
+];
 const STEPS = [
   markStep('range', [0, 2], 7, '进入划分', [0, 2]),
   compareStep(0, 1, 9, '比较 49 与 38'),
@@ -80,5 +85,22 @@ describe('deriveStats / derivePasses', () => {
   it('每趟结果来自 passEnd 快照，趟次从 1 递增', () => {
     const passes = derivePasses(STEPS, STEPS.length);
     expect(passes).toEqual([{ pass: 1, data: [38, 49, 65] }]);
+  });
+});
+
+describe('ViewState.vars 变量值通道', () => {
+  it('vars 会累积进 ViewState，且后来的同名键覆盖先前的', () => {
+    expect(replay(DATA, VARS_STEPS, 2).vars).toEqual({ i: 1, j: 1 });
+    expect(replay(DATA, VARS_STEPS, 3).vars).toEqual({ i: 1, j: 1 });
+  });
+
+  it('没有 vars 的步骤流：ViewState.vars 是空对象（不是 null）', () => {
+    expect(createViewState([1, 2]).vars).toEqual({});
+    expect(createViewState([1, 2]).vars).not.toBeNull();
+    expect(replay([1, 2], [compareStep(0, 1, 1, 'x')], 1).vars).toEqual({});
+  });
+
+  it('重放任意前缀都不会被后续步骤的 vars 污染', () => {
+    expect(replay(DATA, VARS_STEPS, 1).vars).toEqual({ i: 0, j: 1 });
   });
 });

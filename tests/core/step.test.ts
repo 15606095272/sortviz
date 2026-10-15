@@ -1,4 +1,4 @@
-import { compareStep, swapStep, assignStep, markStep, unmarkStep, auxWriteStep, passEndStep } from '../../src/core/step';
+import { compareStep, swapStep, assignStep, markStep, unmarkStep, auxWriteStep, passEndStep, withVars } from '../../src/core/step';
 
 describe('step 构造函数', () => {
   it('compare 记录两个下标并计 1 次比较', () => {
@@ -34,5 +34,24 @@ describe('step 构造函数', () => {
     const s = passEndStep(arr, 13, '第 1 趟结束');
     arr[0] = 999;
     expect(s.snapshot).toEqual([49, 38]);
+  });
+});
+
+describe('withVars', () => {
+  it('withVars 附加变量值且不改动原步骤', () => {
+    const base = compareStep(1, 2, 3, 'x');
+    const tagged = withVars(base, { i: 1 });
+    expect(tagged.vars).toEqual({ i: 1 });
+    expect(base.vars).toBeUndefined();
+    expect(tagged.kind).toBe(base.kind);
+    expect(tagged.indices).toEqual(base.indices);
+  });
+
+  it('withVars 传出的对象是副本（改它不影响原始 vars 入参）', () => {
+    const vars = { i: 5, j: 7 };
+    const tagged = withVars(compareStep(0, 1, 1, 'x'), vars);
+    expect(tagged.vars).not.toBe(vars);
+    vars.i = 99;
+    expect(tagged.vars).toEqual({ i: 5, j: 7 });
   });
 });
