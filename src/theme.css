@@ -431,7 +431,9 @@ input[type="range"].seek::-moz-range-thumb { opacity: 0; }
    默认下这个 div 作为 flex item 会「按内容收缩」—— 宿主宽度恒等于当前行宽，
    cellsPerRow 于是永远算到下限（4 格 = 232px 自锁，视口再宽也不换行）。
    宽度只由卡片决定，行内各自居中（每行 .cellrow 再按内容收缩居中）。 */
-.arraywrap > div {
+/* 只命中视图宿主，别误伤同为 .arraywrap 直接子元素的图例（否则图例会被排成竖列） */
+.arraywrap > .array-view,
+.arraywrap > .bar-view {
   width: 100%;
   display: flex;
   flex-direction: column;
