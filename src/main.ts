@@ -44,7 +44,7 @@ export function mountApp(root: HTMLElement): void {
     // 此时回落到本算法的第一行伪代码，避免「当前执行行已高亮」的标签下没有任何高亮行。
     const activeLine = state.lastCodeLine || algo.pseudocode[0]?.line || 0;
     renderPseudocode(layout.pseudoHost, algo.pseudocode, activeLine);
-    renderVars(layout.varsHost, state, algorithmId);
+    renderVars(layout.varsHost, state, algorithmId, indexBase);
     renderCounters(layout.countersHost, deriveStats(steps, index));
     renderActionNote(layout.noteHost, state.lastNote, indexBase);
     renderComplexity(layout.complexityHost, algo.complexity, algo.stable);

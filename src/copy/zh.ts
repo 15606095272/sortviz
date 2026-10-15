@@ -39,6 +39,8 @@ export const COPY = {
     place: '当前位', root: 'root', child: 'child', heapSize: '堆大小', depth: '递归深度', placed: '已就位',
   },
   hintStructure: '尚未开始 · 播放或单步后这里显示结构变化',
+  hintNoStructure: '这一步没有结构视图 · 看左侧数组与「每趟结果」',
+  shellGroupFooter: '增量 d = {gap} · 分成 {gap} 组，组内做插入排序',
   legendSorted: '已就位',
   legendComparing: '正在比较',
   legendPivot: '本轮基准',

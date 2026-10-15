@@ -1,6 +1,6 @@
 import { createStructureView } from '../../src/views/structure-view';
 import { createViewState, replay } from '../../src/core/replay';
-import { markStep, unmarkStep } from '../../src/core/step';
+import { compareStep, markStep, unmarkStep, withVars } from '../../src/core/step';
 import { COPY } from '../../src/copy/zh';
 import type { ViewContext } from '../../src/core/registry';
 
@@ -19,6 +19,30 @@ describe('结构视图', () => {
     const empty = createViewState(data);
     view.render(empty, ctx(data));
     expect(host.querySelectorAll('.tree-level')).toHaveLength(0);
+  });
+
+  it('希尔：按当前增量分组着色并给脚注', () => {
+    const data = [49, 38, 65, 97, 76, 13, 27, 49];
+    const host = document.createElement('div');
+    const view = createStructureView();
+    view.mount(host, { data, algorithmId: 'shell' });
+    const steps = [withVars(markStep('active', [4], 3, '取下标 4'), { gap: 4 })];
+    view.render(replay(data, steps, 1), { data, algorithmId: 'shell' });
+    const zones = [...host.querySelectorAll('.zone')];
+    expect(zones).toHaveLength(8);
+    expect(zones.map((z) => z.getAttribute('data-group'))).toEqual(['0', '1', '2', '3', '0', '1', '2', '3']);
+    expect(host.querySelector('.tree-footer')!.textContent).toContain('增量 d = 4');
+  });
+
+  it('已经跑起来但没有可视结构时，提示不是「尚未开始」', () => {
+    const data = [49, 38, 65, 97];
+    const host = document.createElement('div');
+    const view = createStructureView();
+    view.mount(host, { data, algorithmId: 'radix' });
+    view.render(replay(data, [compareStep(0, 1, 9, '比较')], 1), { data, algorithmId: 'radix' });
+    const hint = host.querySelector('.hint')!;
+    expect(hint.textContent).toBe(COPY.hintNoStructure);
+    expect(hint.textContent).not.toContain('尚未开始');
   });
 
   it('三种结构都不成立时渲染占位提示，进入划分后消失', () => {

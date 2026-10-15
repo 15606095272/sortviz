@@ -2,7 +2,7 @@ import type { CodeLine, Complexity } from '../core/registry';
 import type { ViewState } from '../core/replay';
 import type { Stats } from '../core/step';
 import { COPY } from '../copy/zh';
-import { rewriteIndices, type IndexBase } from '../core/index-base';
+import { formatIndex, rewriteIndices, type IndexBase } from '../core/index-base';
 
 export interface VarEntry { label: string; value: string }
 
@@ -14,14 +14,20 @@ const VAR_ORDER = ['i', 'j', 'mid', 'low', 'high', 'pivot', 'key', 'minIndex', '
  * 真值优先：算法没带出的量不再从解说文本里猜数字，只对公共量做兜底推导
  * （递归深度 ← 调用栈深度，堆大小 ← 堆区右界 + 1，已就位 ← 有序集大小）。
  */
-export function deriveVars(state: ViewState, _algorithmId: string): VarEntry[] {
+/** 这些键存的是「下标」，切到 1 基时要 +1；其余键（pivot/key/增量/段长/堆大小…）是值或计数，不换算 */
+const INDEX_KEYS = new Set(['i', 'j', 'mid', 'low', 'high', 'minIndex', 'k', 'lo', 'hi', 'root', 'child']);
+
+export function deriveVars(state: ViewState, _algorithmId: string, indexBase: IndexBase = 0): VarEntry[] {
   const labels = COPY.varLabels as Record<string, string>;
   const label = (key: string): string => labels[key] ?? key;
   const entries: VarEntry[] = [];
   for (const key of VAR_ORDER) {
     const value = state.vars[key];
     if (key === 'placed' || key === 'depth' || key === 'heapSize') continue;   // 公共量单独处理
-    if (value !== undefined) entries.push({ label: label(key), value: String(value) });
+    if (value !== undefined) {
+      const shown = INDEX_KEYS.has(key) ? formatIndex(value, indexBase) : value;
+      entries.push({ label: label(key), value: String(shown) });
+    }
   }
   // 公共量：算法没带就自己推（递归深度从 callStack，已就位从 sorted，堆大小从 heapSize+1）
   if (state.callStack.length > 0) entries.push({ label: label('depth'), value: String(state.callStack.length) });
@@ -53,9 +59,9 @@ function statChip(label: string, value: string): HTMLElement {
 }
 
 /** 变量区：一行小卡片，键值用 deriveVars 的推导结果 */
-export function renderVars(host: HTMLElement, state: ViewState, algorithmId: string): void {
+export function renderVars(host: HTMLElement, state: ViewState, algorithmId: string, indexBase: IndexBase = 0): void {
   host.innerHTML = '';
-  for (const entry of deriveVars(state, algorithmId)) host.append(statChip(entry.label, entry.value));
+  for (const entry of deriveVars(state, algorithmId, indexBase)) host.append(statChip(entry.label, entry.value));
 }
 
 /** 计数器区：比较 / 交换 / 移动（408 口径：交换 = 3 移动） */

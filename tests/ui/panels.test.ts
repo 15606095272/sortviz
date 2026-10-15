@@ -54,6 +54,18 @@ describe('deriveVars 变量面板（真值优先）', () => {
     }
   });
 
+  it('切到 1 基：索引类变量 +1，值类变量（pivot/key/增量/段长）不动', () => {
+    const steps = quick.run(INPUT);
+    const state = replay(INPUT, steps, Math.floor(steps.length * 0.3));
+    const at0 = new Map(deriveVars(state, 'quick', 0).map((v) => [v.label, v.value]));
+    const at1 = new Map(deriveVars(state, 'quick', 1).map((v) => [v.label, v.value]));
+    for (const key of ['i', 'j', 'low', 'high']) {
+      if (!at0.has(key)) continue;
+      expect(Number(at1.get(key)), key).toBe(Number(at0.get(key)) + 1);
+    }
+    if (at0.has('pivot')) expect(at1.get('pivot')).toBe(at0.get('pivot'));
+  });
+
   it('9 个算法的变量面板都不为空、且值都是数字（表驱动）', () => {
     resetRegistry();
     registerBuiltinAlgorithms();

@@ -612,6 +612,25 @@ input[type="range"].seek::-moz-range-thumb { opacity: 0; }
   color: var(--text-strong);
 }
 
+.zone[data-group="0"] {
+  background: var(--c-sorted-bg);
+  border-color: var(--c-sorted-line);
+}
+
+.zone[data-group="1"] {
+  background: var(--c-comparing-bg);
+  border-color: var(--c-comparing-line);
+}
+
+.zone[data-group="2"] {
+  background: var(--c-pivot-bg);
+  border-color: var(--c-pivot-line);
+}
+
+.zone[data-group="3"] {
+  background: var(--c-soft);
+}
+
 .zone[data-zone="unsorted"] {
   background: var(--c-default-bg);
   color: var(--text-strong);

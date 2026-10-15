@@ -11,22 +11,40 @@ export function createStructureView(): ViewModule {
     host.classList.add('structure-view');
   }
 
-  function render(state: ViewState, _ctx: ViewContext): void {
+  function render(state: ViewState, ctx: ViewContext): void {
     if (!host) return;
     host.innerHTML = '';
 
     if (state.heapSize !== null) { renderHeap(host, state); return; }
     if (state.callStack.length > 0) { renderRecursionTree(host, state); return; }
+    // 希尔排序：显示当前增量下的分组（组内做插入排序），比等有序区形成更能说明问题
+    const gap = state.vars['gap'];
+    if (ctx.algorithmId === 'shell' && gap !== undefined) { renderGroups(host, state, gap); return; }
     if (state.sorted.size > 0) { renderZones(host, state); return; }
-    // 第 0 步三种结构都还没出现（快排要等进入划分、插入/冒泡要等有序区标记），
-    // 否则右侧就是一张空白卡；给一句占位说明，第一眼不至于像坏了。
-    renderHint(host);
+    // 三种结构都没出现：第 0 步给「尚未开始」，跑起来之后给「无结构视图」的准确提示
+    renderHint(host, state);
   }
 
-  function renderHint(root: HTMLElement): void {
+  /** 希尔：按当前增量分组着色（下标 i 属于第 i % gap 组） */
+  function renderGroups(root: HTMLElement, state: ViewState, gap: number): void {
+    state.data.forEach((value, i) => {
+      const zone = document.createElement('div');
+      zone.className = 'zone';
+      zone.dataset.group = String(i % gap);
+      zone.textContent = String(value);
+      root.append(zone);
+    });
+    const footer = document.createElement('div');
+    footer.className = 'tree-footer';
+    footer.textContent = COPY.shellGroupFooter.replace('{gap}', String(gap));
+    root.append(footer);
+  }
+
+  function renderHint(root: HTMLElement, state: ViewState): void {
     const hint = document.createElement('p');
     hint.className = 'hint';
-    hint.textContent = COPY.hintStructure;
+    // lastCodeLine 为 0 才是真的「还没开始」；已经跑起来却无可视结构时，别再说「尚未开始」
+    hint.textContent = state.lastCodeLine === 0 ? COPY.hintStructure : COPY.hintNoStructure;
     root.append(hint);
   }
 
