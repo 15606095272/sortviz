@@ -85,6 +85,19 @@ describe('数组视图', () => {
     expect(auxCells[1].textContent).toBe('1');
   });
 
+  it('堆排序时堆区格子带 heap 标记（虚线区随堆收缩）', () => {
+    const host = document.createElement('div');
+    const data = [97, 76, 65, 38];
+    const view = createArrayView();
+    view.mount(host, ctx(data));
+    // range = [0, 2] → heapSize 字段 = 2（replay 存的是堆内末下标）
+    view.render(replay(data, [markStep('heap', [0, 2], 1, '堆大小', [0, 2])], 1), ctx(data));
+    const marks = [...host.querySelectorAll('.cell')].map((c) => c.getAttribute('data-mark') ?? '');
+    expect(marks[0]).toContain('heap');
+    expect(marks[2]).toContain('heap');
+    expect(marks[3]).not.toContain('heap');
+  });
+
   it('destroy 清空宿主', () => {
     const host = document.createElement('div');
     const view = createArrayView();
