@@ -6,11 +6,6 @@ import type { ViewContext } from '../../src/core/registry';
 
 const ctx = (data: number[]): ViewContext => ({ data, algorithmId: 'quick' });
 
-// 数组视图现在还会挂出「辅助数组行」（.cellrow.auxrow），里面同样是 .cell；
-// 与主数组有关的断言一律用 MAIN_CELL 限定主行，避免把辅助格子也算进去。
-const MAIN_ROW = '.cellrow:not(.auxrow)';
-const MAIN_CELL = `${MAIN_ROW} .cell`;
-
 describe('数组视图', () => {
   it('挂载后每格一个元素，下标从 0 开始', () => {
     const host = document.createElement('div');
@@ -18,9 +13,9 @@ describe('数组视图', () => {
     const data = [49, 38, 65];
     view.mount(host, ctx(data));
     view.render(createViewState(data), ctx(data));
-    expect(host.querySelectorAll(MAIN_CELL)).toHaveLength(3);
+    expect(host.querySelectorAll('.cell')).toHaveLength(3);
     expect([...host.querySelectorAll('.idxnum')].map((n) => n.textContent)).toEqual(['0', '1', '2']);
-    expect([...host.querySelectorAll(MAIN_CELL)].map((n) => n.textContent)).toEqual(['49', '38', '65']);
+    expect([...host.querySelectorAll('.cell')].map((n) => n.textContent)).toEqual(['49', '38', '65']);
   });
 
   it('超过 16 个元素时换行，每行 ≤ 16 格', () => {
@@ -29,7 +24,7 @@ describe('数组视图', () => {
     const view = createArrayView();
     view.mount(host, ctx(data));
     view.render(createViewState(data), ctx(data));
-    const rows = host.querySelectorAll(MAIN_ROW);
+    const rows = host.querySelectorAll('.cellrow');
     expect(rows).toHaveLength(2);
     expect(rows[0].querySelectorAll('.cell')).toHaveLength(16);
     expect(rows[1].querySelectorAll('.cell')).toHaveLength(4);
@@ -42,7 +37,7 @@ describe('数组视图', () => {
     view.mount(host, ctx(data));
     const steps = [markStep('pivot', [0], 7, 'pivot'), compareStep(1, 2, 9, '比较')];
     view.render(replay(data, steps, 2), ctx(data));
-    const cells = [...host.querySelectorAll(MAIN_CELL)];
+    const cells = [...host.querySelectorAll('.cell')];
     expect(cells[0].getAttribute('data-mark')).toContain('pivot');
     expect(cells[1].getAttribute('data-mark')).toContain('comparing');
     expect(cells[2].getAttribute('data-mark')).toContain('comparing');
@@ -54,7 +49,7 @@ describe('数组视图', () => {
     const view = createArrayView();
     view.mount(host, ctx(data));
     view.render(replay(data, [swapStep(0, 1, 11, '交换')], 1), ctx(data));
-    expect([...host.querySelectorAll(MAIN_CELL)].map((n) => n.textContent)).toEqual(['38', '49']);
+    expect([...host.querySelectorAll('.cell')].map((n) => n.textContent)).toEqual(['38', '49']);
   });
 
   it('activeIndices 渲染成指针标签', () => {
@@ -85,7 +80,7 @@ describe('数组视图', () => {
     const auxRow = host.querySelector('.auxrow') as HTMLElement;
     expect(auxRow.hidden).toBe(false);
     expect(host.querySelector('.auxlab')!.textContent).toBe(COPY.auxArray);
-    const auxCells = [...auxRow.querySelectorAll('.cell')];
+    const auxCells = [...auxRow.querySelectorAll('.auxcell')];
     expect(auxCells[0].textContent).toBe('3');
     expect(auxCells[1].textContent).toBe('1');
   });

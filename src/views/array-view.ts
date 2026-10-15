@@ -33,7 +33,7 @@ export function createArrayView(): ViewModule {
 
       // 同块的辅助数组行（归并/基数用）：无 aux 步骤时整行 hidden
       const auxRow = document.createElement('div');
-      auxRow.className = 'cellrow auxrow';
+      auxRow.className = 'auxrow';
       auxRow.hidden = true;
       const auxLab = document.createElement('div');
       auxLab.className = 'auxlab';
@@ -60,9 +60,9 @@ export function createArrayView(): ViewModule {
 
         // 辅助格子：无 idxnum、无 ptr，只存引用
         const auxBox = document.createElement('div');
-        auxBox.className = 'cellbox';
+        auxBox.className = 'auxbox';
         const auxCell = document.createElement('div');
-        auxCell.className = 'cell';
+        auxCell.className = 'auxcell';
         auxCell.dataset.index = String(index);
         auxBox.append(auxCell);
         auxIdxRow.append(auxBox);
