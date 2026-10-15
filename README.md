@@ -113,11 +113,44 @@ npm test
 
 单文件构建由 `scripts/inline-single.mjs` 完成（`npm run build:single` 调用它把 JS/CSS 内联进 `dist-single/sortviz.html`），配合 `vite.config.single.ts` 使用，详见「快速开始 → 本地使用」。
 
+另有一个可重复的浏览器验收脚本 `scripts/p1-acceptance.mjs`（零依赖 CDP，逐个算法核对 DOM 与面板/结构视图/伪代码联动），改动视图或面板后可跑一遍做回归。
+
+## 部署到 GitHub Pages
+
+工作流文件 `.github/workflows/deploy.yml` 已随仓库提供：推送到 `main`（或在 Actions 页手动触发 `workflow_dispatch`）后，它会自动执行 `npm ci` → `npm test` → `npm run build`，再把 `dist/` 作为 Pages 制品上传并发布。两个 job：`build` 负责构建与测试，`deploy` 负责发布（`needs: build`，挂在 `github-pages` environment 上）。
+
+前提：**`package-lock.json` 必须入库**（`npm ci` 依赖它；本仓库已入库）。另外 `vite.config.ts` 里是 `base: './'`，相对路径，因此 `/<仓库名>/` 这种子路径部署不会丢 JS/CSS。
+
+**你自己需要执行的两条命令 / 两步**（本机没有 `gh` CLI、仓库也还没有 remote，所以这部分只能你来做，我没有代跑）：
+
+1. **建远程仓库并推送**（把 `<用户名>` 换成你的 GitHub 用户名）：
+
+   ```bash
+   git remote add origin https://github.com/<用户名>/sortviz.git && git push -u origin main
+   ```
+
+2. **在仓库 Settings → Pages → Build and deployment → Source 里把来源选成 `GitHub Actions`**（这是一个网页操作，不是命令行；**不要**选 "Deploy from a branch"）。
+
+之后每次推 `main` 都会重新构建与发布，预期访问地址形如：
+
+```
+https://<用户名>.github.io/sortviz/
+```
+
 ## 状态
 
 - P0（可用版本）：9 种算法中的 3 种 + 双视图 + 教学面板 → 已打标 `v0.1.0`
 - P1：9 种算法齐全 + 变量面板真值 + 下标进制开关 → 已打标 `v0.2.0`
-- P2（打磨与发布）：柱状图视图、快捷键与无障碍、深色主题、窄屏降级、动画减弱、双击即用的单文件版、部署 GitHub Pages + Lighthouse 验收
+- P2（打磨与发布）：
+  - 柱状图视图 → ✅ 已完成
+  - 快捷键与无障碍 → ✅ 已完成
+  - 深色主题 → ✅ 已完成
+  - 窄屏降级 → ✅ 已完成
+  - 动画减弱（`prefers-reduced-motion`）→ ✅ 已完成
+  - 双击即用的单文件版（`npm run build:single`）→ ✅ 已完成
+  - 内联 SVG favicon + meta，控制台零 404 → ✅ 已完成
+  - GitHub Pages 部署工作流 → ✅ 工作流文件已就绪；**线上生效待你推送后生效**（本机无 `gh`/remote，未执行推送）
+  - Lighthouse 验收（本地 `dist/`、移动端模拟节流）：performance **100** / accessibility **96** / best-practices **100** / seo **100**；控制台 0 错误 0 失败请求
 - P3：折半查找模块（验证插件接口）与插件化文档
 - 完整计划见 life-os 仓库 `docs/superpowers/plans/2026-10-15-sortviz-implementation.md`
 
