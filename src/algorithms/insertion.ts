@@ -33,14 +33,14 @@ export const insertion = {
       while (j >= 0) {
         // 下标 i 是「空位」：key 已取出，a[i] 的显示值可能已被后移元素覆盖，
         // 比较的对象始终是 key 的值，故动作说明里写 key 而不是 a[i]。
-        steps.push(withVars(compareStep(j, i, 4, `比较 a[${j}]=${a[j]} 与待插入的 key=${key}`), { i, j }));
+        steps.push(withVars(compareStep(j, i, 4, `比较 a[${j}]=${a[j]} 与待插入的 key=${key}`), { i, j, key }));
         if (a[j] <= key) break;
         a[j + 1] = a[j];
-        steps.push(withVars(assignStep(j + 1, a[j], 5, `a[${j}]=${a[j]} > key → 后移一位到 a[${j + 1}]`), { i, j }));
+        steps.push(withVars(assignStep(j + 1, a[j], 5, `a[${j}]=${a[j]} > key → 后移一位到 a[${j + 1}]`), { i, j, key }));
         j -= 1;
       }
       a[j + 1] = key;
-      steps.push(withVars(assignStep(j + 1, key, 7, `key=${key} 落到下标 ${j + 1}`), { i, j }));
+      steps.push(withVars(assignStep(j + 1, key, 7, `key=${key} 落到下标 ${j + 1}`), { i, j, key }));
       steps.push(markStep('sorted', [i], 1, `第 ${i} 趟结束：有序区扩到 [0,${i}]`));
       steps.push(passEndStep(a, 1, `第 ${i} 趟结束`));
     }

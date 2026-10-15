@@ -32,14 +32,14 @@ export const shell = {
         steps.push(markStep('active', [k], 3, `取出 a[${k}]=${key}，在步长 ${gap} 的分组内插入`));
         let j = k - gap;
         while (j >= 0) {
-          steps.push(withVars(compareStep(j, k, 4, `比较 a[${j}]=${a[j]} 与 key=${key}`), { gap, k, j }));
+          steps.push(withVars(compareStep(j, k, 4, `比较 a[${j}]=${a[j]} 与 key=${key}`), { gap, k, j, key }));
           if (a[j] <= key) break;
           a[j + gap] = a[j];
-          steps.push(withVars(assignStep(j + gap, a[j], 5, `a[${j}]=${a[j]} > key → 后移 ${gap} 位`), { gap, k, j }));
+          steps.push(withVars(assignStep(j + gap, a[j], 5, `a[${j}]=${a[j]} > key → 后移 ${gap} 位`), { gap, k, j, key }));
           j -= gap;
         }
         a[j + gap] = key;
-        steps.push(withVars(assignStep(j + gap, key, 6, `key=${key} 落到下标 ${j + gap}`), { gap, k, j }));
+        steps.push(withVars(assignStep(j + gap, key, 6, `key=${key} 落到下标 ${j + gap}`), { gap, k, j, key }));
       }
       // 只有增量 1 那一趟结束时整个序列才真正有序
       if (gap === 1) {

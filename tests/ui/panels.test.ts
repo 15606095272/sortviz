@@ -44,6 +44,16 @@ describe('deriveVars 变量面板（真值优先）', () => {
     for (const v of vars) expect(v.value).not.toBe('—');   // 真值优先后不应再出现占位符
   });
 
+  it('插入类算法的面板给出待插入值 key（408 手算最盯的量）', () => {
+    for (const id of ['insertion', 'binary-insertion', 'shell']) {
+      const algo = getAlgorithm(id);
+      const steps = algo.run(INPUT);
+      const state = replay(INPUT, steps, Math.floor(steps.length / 2));
+      const vars = deriveVars(state, id);
+      expect(vars.some((v) => v.label === 'key'), `${id} 缺 key`).toBe(true);
+    }
+  });
+
   it('9 个算法的变量面板都不为空、且值都是数字（表驱动）', () => {
     resetRegistry();
     registerBuiltinAlgorithms();
