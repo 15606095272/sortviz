@@ -41,6 +41,8 @@ npm test           # 单元测试
 | 2-路归并排序 | O(n log n) | O(n log n) | O(n log n) | O(n) | 稳定 | 自底向上，段长 1→2→4 |
 | 基数排序 | O(d(n+r)) | O(d(n+r)) | O(d(n+r)) | O(n+r) | 稳定 | LSD，按位分桶 |
 
+另附**折半查找**（`category: 'search'`，用来验证插件契约）：在有序表上按区间收窄查找，数组视图用区间标记显示「当前查找区间」；目标默认取第二个元素，`run(input, target?)` 也支持显式传入。伪代码 8 行、实现约 75 行，**加它时 `src/core/` 一行未改**。
+
 ## 功能
 
 - 自定义数据（2–64 个整数，逗号/空格/顿号分隔，允许重复与负数），中文校验提示
@@ -111,6 +113,47 @@ src/
 
 分层约束：`core/` 不 import `views/`、`ui/`；`algorithms/` 只 import `core/step`；`views/` 只读 `ViewState` 与 `ViewContext`，不 import 算法。
 
+## 如何加一个算法（或查找模块）
+
+三步，**内核零改动**（`src/core/` 一行都不用碰；折半查找就是这么加进去的，`git diff --stat v0.3.0 HEAD -- src/core/` 为空）：
+
+1. **写模块文件** `src/algorithms/<id>.ts`，导出一个对象：
+
+   ```ts
+   export const myAlgo = {
+     id: 'my-algo',
+     name: { zh: '中文名', en: 'English' },
+     category: 'insert',                    // insert | swap | select | merge | radix | search | tree
+     stable: true,
+     complexity: { best: 'O(n)', avg: 'O(n²)', worst: 'O(n²)', space: 'O(1)' },
+     pseudocode: [ { line: 1, indent: 0, text: '…' } ],
+     defaultViews: ['array', 'structure'] as const,
+     run(input: number[]): Step[] { /* 只产步骤流，不碰 DOM */ },
+   };
+   ```
+
+   `run()` 里可用的步骤构造器（都来自 `src/core/step`）：
+
+   | 构造器 | 语义 | 计数 |
+   |--------|------|------|
+   | `compareStep(i, j, codeLine, note)` | 比较 a[i] 与 a[j] | 1 次比较 |
+   | `swapStep(i, j, codeLine, note)` | 交换 | 1 交换 + 3 移动 |
+   | `assignStep(i, v, codeLine, note)` | 赋值/移位/回填 | 1 移动 |
+   | `markStep(label, indices, codeLine, note?, range?)` / `unmarkStep` | 打/取消标记：`sorted` `pivot` `range` `heap` `active` `aux` | — |
+   | `noteStep(note, codeLine)` | 只解说、不改数据 | — |
+   | `passEndStep(snapshot, codeLine, note)` | 一趟结束快照（喂「每趟结果」表） | — |
+   | `withVars(step, { i, j, … })` | 带出该步的**变量真值**给面板 | — |
+
+   两个易踩的点：
+   - `markStep('range', …, range)` **传了第 5 个参数**才会进递归栈（结构视图画成划分树）；不传就只上色（折半查找的「当前查找区间」就是后者）。
+   - `withVars` 的键只能用这套词表：`i j mid low high pivot key minIndex gap k width lo hi place heapSize depth placed`；其中索引类键（`i j mid low high minIndex k lo hi root child`）在切「下标 1 基」时会自动 +1，值类（`pivot key gap width place heapSize`）不会。
+
+2. **注册**：`src/algorithms/index.ts` 里加一行 `import`，再往 `BUILTIN_ORDER`（界面顺序）与 `MODULES` 各加一项。界面 chip、伪代码卡、复杂度卡、变量面板会自动出现。
+
+3. **写测试**：`tests/algorithms/<id>.test.ts`，按教材口径把每趟快照与比较/交换/移动次数**人工核算**成黄金样例，并加至少一条可证伪的性质断言（例如折半查找「比较次数 ≤ ⌈log2(n+1)⌉」、选择排序「比较次数恒为 n(n-1)/2」、堆排序「每趟后末尾 k 个是最大的 k 个」）。
+
+最小示例：**`src/algorithms/binary-search.ts`**（折半查找，8 行伪代码、约 75 行实现，含区间标记、命中/失败文案与 `target` 可选参数），配套测试 `tests/algorithms/binary-search.test.ts`。
+
 ## 测试
 
 ```bash
@@ -166,7 +209,7 @@ https://<用户名>.github.io/sortviz/
   - GitHub Pages 部署工作流 → ✅ 工作流文件已就绪；**线上生效待你推送后生效**（本机无 `gh`/remote，未执行推送）
   - Lighthouse 验收（本地 `dist/`、移动端模拟节流）：performance **100** / accessibility **100** / best-practices **100** / seo **100**；控制台 0 错误 0 失败请求
     （修法：`--muted` 白卡上仅 3.71:1、`--c-accent` 上压白字仅 3.50:1、播放按钮借用的奶茶色仅 2.80:1，三处按 WCAG 加深后 `color-contrast` 失败节点归零）
-- P3：折半查找模块（验证插件接口）与插件化文档
+- P3：折半查找模块（验证插件接口，内核零改动）与插件化文档 → 已完成，已打标 `v1.0.0`
 - 完整计划见 life-os 仓库 `docs/superpowers/plans/2026-10-15-sortviz-implementation.md`
 
 ## 许可

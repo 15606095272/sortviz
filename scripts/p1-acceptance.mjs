@@ -47,15 +47,15 @@ const check = (ok, label, detail) => {
 // —— 期望的结构视图类型（按算法） ——
 const STRUCTURE = {
   插入: 'zone', 折半插入: 'zone', 希尔: 'group', 冒泡: 'zone',
-  快排: 'tree', 选择: 'zone', 堆排: 'heap', 归并: 'tree', 基数: 'hint',
+  快排: 'tree', 选择: 'zone', 堆排: 'heap', 归并: 'tree', 基数: 'hint', 折半查找: 'hint',
 };
 
 console.log('\n=== 逐个算法：DOM 与面板 ===');
 const chips = await js(`[...document.querySelectorAll('.chips .chip')].map(c => c.textContent)`);
 console.log(`chips(${chips.length}): ${chips.join(' / ')}`);
-check(chips.length === 9, '9 个算法 chip', `实际 ${chips.length}`);
+check(chips.length === 10, '10 个模块 chip（9 排序 + 折半查找）', `实际 ${chips.length}`);
 
-for (const name of ['插入', '折半插入', '希尔', '冒泡', '快排', '选择', '堆排', '归并', '基数']) {
+for (const name of ['插入', '折半插入', '希尔', '冒泡', '快排', '选择', '堆排', '归并', '基数', '折半查找']) {
   await js(`(() => { [...document.querySelectorAll('.chips .chip')].find(x => x.textContent === '${name}').click(); return 1; })()`);
   await sleep(150);
   const total = Number(await js(`(document.body.textContent.match(/第 \\d+ \\/ (\\d+) 步/)||[0,0])[1]`));
