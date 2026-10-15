@@ -1,0 +1,57 @@
+/* sortviz —— 唯一色值来源（柔和卡片风：米白 + 橄榄 / 奶茶 / 砖红）
+   后续所有界面颜色必须引用这里的语义 token，不得在组件里写死色值。 */
+:root {
+  --bg: #f6f1e8;
+  --card: #fffdf9;
+  --line: #e9dfd1;
+  --line2: #f2ebe0;
+  --text: #3a332a;
+  --muted: #8d8271;
+  --radius: 16px;
+
+  /* 状态语义色 */
+  --c-default-bg: #fdfaf4;
+  --c-default-line: #e9dfd1;
+  --c-comparing: #c2915f;
+  --c-comparing-bg: #fbeee4;
+  --c-swapping: #b5654a;
+  --c-pivot: #8d6a8f;
+  --c-pivot-bg: #f2eaf3;
+  --c-sorted: #7d8f69;
+  --c-sorted-bg: #eef3e9;
+  --c-aux: #6b8ea8;
+  --c-accent: #7d8f69;
+
+  --gap: 12px;
+}
+
+/* 状态标记（data-mark 允许空格分隔的多个标记） */
+.cell[data-mark~="sorted"] {
+  background: var(--c-sorted-bg);
+  border-color: #c6d6b8;
+}
+.cell[data-mark~="comparing"] {
+  background: var(--c-comparing-bg);
+  border-color: #e8c8ae;
+}
+.cell[data-mark~="pivot"] {
+  background: var(--c-pivot-bg);
+  border-color: #d6c2d8;
+}
+
+/* 最基础排版 */
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
