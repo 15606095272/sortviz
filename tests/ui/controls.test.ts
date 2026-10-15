@@ -53,8 +53,9 @@ describe('控制条', () => {
   it('算法 chips 按注册顺序渲染，点击回调带 id', () => {
     const { host, calls } = setup();
     const chips = [...host.querySelectorAll('.chip')];
-    expect(chips.map((c) => c.textContent)).toEqual(['直接插入排序', '冒泡排序', '快速排序']);
-    (chips[2] as HTMLElement).click();
+    expect(chips.map((c) => c.textContent)).toEqual(['插入', '折半插入', '希尔', '冒泡', '快排']);
+    // 注册顺序变成 插入/折半插入/希尔/冒泡/快排，快排（quick）已是第 5 个 chip
+    (chips[4] as HTMLElement).click();
     expect(calls).toContain('algo:quick');
   });
 

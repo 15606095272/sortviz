@@ -60,4 +60,16 @@ export const COPY = {
   errorNotNumber: '有不是数字的内容，请检查输入',
   errorTooLarge: '数值请在 -9999 ~ 9999 之间',
   errorTooLong: '数据过大，步骤已截断（上限 20000 步）',
+  // chips 用的短名：9 个算法时全名会把控制行撑爆（实物稿里就是短名）
+  algoShort: {
+    insertion: '插入',
+    'binary-insertion': '折半插入',
+    shell: '希尔',
+    bubble: '冒泡',
+    quick: '快排',
+    selection: '选择',
+    heap: '堆排',
+    merge: '归并',
+    radix: '基数',
+  },
 } as const;

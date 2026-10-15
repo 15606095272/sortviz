@@ -1,5 +1,5 @@
 import { COPY } from '../copy/zh';
-import { listAlgorithms } from '../core/registry';
+import { getAlgorithm } from '../core/registry';
 
 export type ParseResult = { ok: true; data: number[] } | { ok: false; message: string };
 
@@ -92,7 +92,7 @@ function randomData(count: number): number[] {
  */
 export function createControls(host: HTMLElement, handlers: ControlsHandlers): Controls {
   host.innerHTML = '';
-  const names = new Map(listAlgorithms().map((a) => [a.id, a.name.zh]));
+  const shortNames = COPY.algoShort as Record<string, string>;
 
   let playing = false;
   let total = 0;
@@ -105,7 +105,8 @@ export function createControls(host: HTMLElement, handlers: ControlsHandlers): C
     chips.forEach((chip, i) => chip.classList.toggle('on', handlers.algorithmIds[i] === id));
   };
   for (const id of handlers.algorithmIds) {
-    const chip = mk('span', 'chip', names.get(id) ?? id);
+    // chips 用短名（COPY.algoShort），取不到才回落到算法全名
+    const chip = mk('span', 'chip', shortNames[id] ?? getAlgorithm(id).name.zh);
     chip.dataset.id = id;
     chip.addEventListener('click', () => {
       setAlgorithm(id);
