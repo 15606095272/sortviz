@@ -1,5 +1,5 @@
 import { COPY } from '../copy/zh';
-import { getAlgorithm } from '../core/registry';
+import { getAlgorithm, type ViewKind } from '../core/registry';
 import type { IndexBase } from '../core/index-base';
 
 export type ParseResult = { ok: true; data: number[] } | { ok: false; message: string };
@@ -33,6 +33,7 @@ export interface ControlsHandlers {
   onSeek(index: number): void;
   onSpeed(multiplier: number): void;
   onIndexBase(base: IndexBase): void;
+  onView(kind: ViewKind): void;               // 主视图切换：数组视图 ↔ 柱状图（结构视图始终保留）
 }
 
 export interface Controls {
@@ -40,6 +41,7 @@ export interface Controls {
   setProgress(index: number, total: number, speed: number, playing: boolean): void;
   setPass(text: string): void;         // 进度条右侧的趟次文案（实物稿有，缺省留空）
   setIndexBase(base: IndexBase): void; // 装配层回灌当前下标进制，同步胶囊高亮（与 setPass 同风格）
+  setView(kind: ViewKind): void;       // 装配层回灌当前主视图，同步胶囊高亮（与 setIndexBase 同风格）
 }
 
 /** 实物稿里的默认演示数据（数据结构的经典样例序列） */
@@ -198,6 +200,31 @@ export function createControls(host: HTMLElement, handlers: ControlsHandlers): C
   );
   setIndexBase(0);
 
+  // —— 主视图（数组视图 / 柱状图）——
+  // 只切换左侧主视图，右侧结构视图始终保留；容器类名 viewswitch 与算法 chips(.chips)、
+  // 下标进制(.indexbase) 分开，互不影响既有选择器
+  const viewGroup = mk('div', 'ctrlgroup viewswitch');
+  const viewCaps: { kind: ViewKind; cap: HTMLElement }[] = [];
+  const setView = (kind: ViewKind): void => {
+    for (const item of viewCaps) item.cap.classList.toggle('on', item.kind === kind);
+  };
+  const viewCap = (kind: ViewKind, text: string): HTMLElement => {
+    const cap = mk('span', 'chip', text);
+    cap.dataset.view = kind;
+    cap.addEventListener('click', () => {
+      setView(kind);                   // 本地先亮（与算法 chips 同风格），装配层随后回灌
+      handlers.onView(kind);
+    });
+    viewCaps.push({ kind, cap });
+    return cap;
+  };
+  viewGroup.append(
+    mk('span', 'lab', COPY.viewLabel),
+    viewCap('array', COPY.viewArrayLabel),
+    viewCap('bar', COPY.viewBarLabel),
+  );
+  setView('array');
+
   // —— 播放区 ——
   const transport = mk('div', 'ctrlgroup transport');
   const toStartBtn = buttonEl('ic', '⏮');
@@ -244,7 +271,7 @@ export function createControls(host: HTMLElement, handlers: ControlsHandlers): C
   seekInput.addEventListener('input', () => handlers.onSeek(Number(seekInput.value)));
   progress.append(bar, ptext, seekInput);
 
-  host.append(chipRow, mk('span', 'sep'), dataGroup, mk('span', 'sep'), indexBaseGroup, mk('span', 'sep'), transport, progress, errRow);
+  host.append(chipRow, mk('span', 'sep'), dataGroup, mk('span', 'sep'), viewGroup, mk('span', 'sep'), indexBaseGroup, mk('span', 'sep'), transport, progress, errRow);
 
   const setProgress = (nextIndex: number, nextTotal: number, speed: number, isPlaying: boolean): void => {
     index = nextIndex;
@@ -263,5 +290,5 @@ export function createControls(host: HTMLElement, handlers: ControlsHandlers): C
 
   const setPass = (text: string): void => { passText.textContent = text; };
 
-  return { setError, setProgress, setPass, setIndexBase };
+  return { setError, setProgress, setPass, setIndexBase, setView };
 }

@@ -1,9 +1,10 @@
 import './theme.css';
-import { registerView, getAlgorithm, getView, listAlgorithms, type ViewContext } from './core/registry';
+import { registerView, getAlgorithm, getView, listAlgorithms, type ViewContext, type ViewKind } from './core/registry';
 import { registerBuiltinAlgorithms } from './algorithms';
 import { createPlayer } from './core/player';
 import { replay, deriveStats, derivePasses } from './core/replay';
 import { createArrayView } from './views/array-view';
+import { createBarView } from './views/bar-view';
 import { createStructureView } from './views/structure-view';
 import { createLayout } from './ui/layout';
 import { createControls, type Controls } from './ui/controls';
@@ -19,6 +20,7 @@ const DEFAULT_DATA = [49, 38, 65, 97, 76, 13, 27, 49];
 export function mountApp(root: HTMLElement): void {
   registerBuiltinAlgorithms();
   registerView(createArrayView());
+  registerView(createBarView());
   registerView(createStructureView());
 
   const layout = createLayout(root);
@@ -27,12 +29,24 @@ export function mountApp(root: HTMLElement): void {
   let steps: Step[] = [];
   let controls: Controls | null = null;      // 先声明后赋值：renderAt 内部要用
   let indexBase: IndexBase = 0;              // 展示口径：内部一律 0 基，切 1 基只改显示与文案
+  let viewKind: ViewKind = 'array';          // 左侧主视图：数组视图 / 柱状图（右侧结构视图始终保留）
+
+  // 切换主视图时互斥：先销毁两个主视图再挂载当前那个（避免残留 DOM 与事件）
+  const mountMainView = (ctx: ViewContext): void => {
+    const arrayView = getView('array');
+    const barView = getView('bar');
+    arrayView?.destroy();
+    barView?.destroy();
+    if (viewKind === 'bar') barView?.mount(layout.arrayHost, ctx);
+    else arrayView?.mount(layout.arrayHost, ctx);
+  };
 
   const renderAt = (index: number): void => {
     const algo = getAlgorithm(algorithmId);
     const ctx: ViewContext = { data, algorithmId, indexBase };
     const state = replay(data, steps, index);
-    getView('array')?.render(state, ctx);
+    if (viewKind === 'bar') getView('bar')?.render(state, ctx);
+    else getView('array')?.render(state, ctx);
     getView('structure')?.render(state, ctx);
     // 卡片右上角标签（实物稿里是「下标 0 – 7」「快排 → 递归划分树」这类动态说明）
     layout.arrayTag.textContent = COPY.indexRange
@@ -83,6 +97,14 @@ export function mountApp(root: HTMLElement): void {
       controls?.setIndexBase(base);
       renderAt(player.state.index);
     },
+    // 切主视图：不重跑算法，只换挂载点 + 按当前步重渲染
+    onView: (kind) => {
+      viewKind = kind;
+      controls?.setView(kind);
+      const ctx: ViewContext = { data, algorithmId, indexBase };
+      mountMainView(ctx);
+      renderAt(player.state.index);
+    },
   });
 
   function rebuild(nextAlgorithmId = algorithmId, nextData = data): void {
@@ -93,13 +115,14 @@ export function mountApp(root: HTMLElement): void {
     if (steps.length > MAX_STEPS) { steps = steps.slice(0, MAX_STEPS); controls?.setError(COPY.errorTooLong); }
     // 先 mount 再 setSteps：setSteps 会立刻 emit renderAt(0)，而视图的 render 在
     // mount 之前会直接 return（内部 host 还是 null）。反过来的话首帧就是 8 个空格子。
-    getView('array')?.mount(layout.arrayHost, ctx);
+    mountMainView(ctx);
     getView('structure')?.mount(layout.structHost, ctx);
     player.setSteps(steps);                      // 会重置到第 0 步并触发 renderAt(0)
   }
 
   rebuild();
   controls?.setIndexBase(indexBase);
+  controls?.setView(viewKind);
 }
 
 function randomData(count: number): number[] {

@@ -47,6 +47,7 @@ describe('控制条', () => {
       onSeek: (i) => calls.push(`seek:${i}`),
       onSpeed: (m) => calls.push(`speed:${m}`),
       onIndexBase: (base) => calls.push(`indexbase:${base}`),
+      onView: (kind) => calls.push(`view:${kind}`),
     });
     return { host, controls, calls, applied };
   };
@@ -100,6 +101,17 @@ describe('控制条', () => {
     caps[1].click();
     expect(calls).toContain('indexbase:1');
     controls.setIndexBase(1);
+    expect(caps[1].classList.contains('on')).toBe(true);
+    expect(caps[0].classList.contains('on')).toBe(false);
+  });
+
+  it('主视图切换胶囊在 .viewswitch 里，点击回调带 kind', () => {
+    const { host, controls, calls } = setup();
+    const caps = [...host.querySelectorAll('.viewswitch .chip')] as HTMLElement[];
+    expect(caps.map((c) => c.textContent)).toEqual([COPY.viewArrayLabel, COPY.viewBarLabel]);
+    caps[1].click();
+    expect(calls).toContain('view:bar');
+    controls.setView('bar');
     expect(caps[1].classList.contains('on')).toBe(true);
     expect(caps[0].classList.contains('on')).toBe(false);
   });
