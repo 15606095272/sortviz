@@ -42,6 +42,7 @@ export interface Controls {
   setPass(text: string): void;         // 进度条右侧的趟次文案（实物稿有，缺省留空）
   setIndexBase(base: IndexBase): void; // 装配层回灌当前下标进制，同步胶囊高亮（与 setPass 同风格）
   setView(kind: ViewKind): void;       // 装配层回灌当前主视图，同步胶囊高亮（与 setIndexBase 同风格）
+  setAlgorithm(id: string): void;      // 装配层回灌当前算法，同步 chip 高亮（键盘数字键切算法时用）
 }
 
 /** 实物稿里的默认演示数据（数据结构的经典样例序列） */
@@ -85,6 +86,23 @@ function buttonEl(className: string, text: string): HTMLButtonElement {
   return btn;
 }
 
+/**
+ * 把 span 胶囊做成可聚焦、可用键盘触发的按钮：
+ * role=button + tabindex=0，Enter/空格 等同点击。
+ * 这里 stopPropagation 是必须的 —— 空格同时也是全局「播放/暂停」，
+ * 不拦住的话一次按键会被算两遍（胶囊的动作 + 全局快捷键）。
+ */
+function activatable(el: HTMLElement, activate: () => void): void {
+  el.setAttribute('role', 'button');
+  el.setAttribute('tabindex', '0');
+  el.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter' && event.key !== ' ' && event.key !== 'Spacebar') return;
+    event.preventDefault();
+    event.stopPropagation();
+    activate();
+  });
+}
+
 /** 随机序列（1..99，贴近教材样例的两位正整数） */
 function randomData(count: number): number[] {
   const n = Math.max(MIN_COUNT, Math.min(MAX_COUNT, Math.trunc(count)));
@@ -113,10 +131,12 @@ export function createControls(host: HTMLElement, handlers: ControlsHandlers): C
     // chips 用短名（COPY.algoShort），取不到才回落到算法全名
     const chip = mk('span', 'chip', shortNames[id] ?? getAlgorithm(id).name.zh);
     chip.dataset.id = id;
-    chip.addEventListener('click', () => {
-      setAlgorithm(id);
-      handlers.onAlgorithm(id);
-    });
+    const pick = (): void => {
+      setAlgorithm(id);             // 本地先亮（与下标进制/主视图胶囊同风格），装配层随后回灌
+      handlers.onAlgorithm(id);     // 键盘数字键走的是同一条路（main 里复用同一个 selectAlgorithm）
+    };
+    chip.addEventListener('click', pick);
+    activatable(chip, pick);        // 鼠标点 ↔ 键盘 Enter/空格 等价
     chips.push(chip);
     chipRow.append(chip);
   }
@@ -134,6 +154,7 @@ export function createControls(host: HTMLElement, handlers: ControlsHandlers): C
   dataInput.type = 'text';
   dataInput.className = 'datainput';
   dataInput.value = DEFAULT_DATA;
+  dataInput.setAttribute('aria-label', COPY.ariaData);
   const applyBtn = buttonEl('pri', COPY.apply);
   const randomBtn = buttonEl('', COPY.random);
 
@@ -154,6 +175,7 @@ export function createControls(host: HTMLElement, handlers: ControlsHandlers): C
   randomBtn.addEventListener('click', () => handlers.onRandom());
 
   const countInput = rangeInput('count', MIN_COUNT, MAX_COUNT, 1, DEFAULT_COUNT);
+  countInput.setAttribute('aria-label', COPY.countLabel);
   const countValue = mk('span', 'countval', String(DEFAULT_COUNT));
   setFill(countInput);
   countInput.addEventListener('input', () => {
@@ -186,10 +208,12 @@ export function createControls(host: HTMLElement, handlers: ControlsHandlers): C
   const baseCap = (base: IndexBase, text: string): HTMLElement => {
     const cap = mk('span', 'chip', text);
     cap.dataset.base = String(base);
-    cap.addEventListener('click', () => {
+    const pick = (): void => {
       setIndexBase(base);              // 本地先亮（与算法 chips 同风格），装配层随后回灌
       handlers.onIndexBase(base);
-    });
+    };
+    cap.addEventListener('click', pick);
+    activatable(cap, pick);
     baseCaps.push({ base, cap });
     return cap;
   };
@@ -211,10 +235,12 @@ export function createControls(host: HTMLElement, handlers: ControlsHandlers): C
   const viewCap = (kind: ViewKind, text: string): HTMLElement => {
     const cap = mk('span', 'chip', text);
     cap.dataset.view = kind;
-    cap.addEventListener('click', () => {
+    const pick = (): void => {
       setView(kind);                   // 本地先亮（与算法 chips 同风格），装配层随后回灌
       handlers.onView(kind);
-    });
+    };
+    cap.addEventListener('click', pick);
+    activatable(cap, pick);
     viewCaps.push({ kind, cap });
     return cap;
   };
@@ -232,12 +258,19 @@ export function createControls(host: HTMLElement, handlers: ControlsHandlers): C
   const playBtn = buttonEl('play', COPY.play);
   const forwardBtn = buttonEl('ic', '⏭');
 
+  // 图标按钮没有可读文本，必须显式给 aria-label（文案统一走 COPY）
+  toStartBtn.setAttribute('aria-label', COPY.ariaReset);
+  backBtn.setAttribute('aria-label', COPY.ariaStepBack);
+  forwardBtn.setAttribute('aria-label', COPY.ariaStepForward);
+  playBtn.setAttribute('aria-label', COPY.ariaPlay);
+
   toStartBtn.addEventListener('click', () => handlers.onSeek(0));
   backBtn.addEventListener('click', () => handlers.onStepBack());
   forwardBtn.addEventListener('click', () => handlers.onStepForward());
   playBtn.addEventListener('click', () => handlers.onPlayToggle());
 
   const speedInput = rangeInput('speed', MIN_SPEED, MAX_SPEED, SPEED_STEP, 1);
+  speedInput.setAttribute('aria-label', COPY.ariaSpeed);
   const speedValue = mk('span', 'speedval', '1×');
   setFill(speedInput);
   speedInput.addEventListener('input', () => {
@@ -268,6 +301,7 @@ export function createControls(host: HTMLElement, handlers: ControlsHandlers): C
   const ptext = mk('div', 'ptext');
   ptext.append(stepText, passText);
   const seekInput = rangeInput('seek', 0, 0, 1, 0);
+  seekInput.setAttribute('aria-label', COPY.ariaSeek);
   seekInput.addEventListener('input', () => handlers.onSeek(Number(seekInput.value)));
   progress.append(bar, ptext, seekInput);
 
@@ -278,6 +312,8 @@ export function createControls(host: HTMLElement, handlers: ControlsHandlers): C
     total = nextTotal;
     playing = isPlaying;
     playBtn.textContent = playing ? COPY.pause : total > 0 && index >= total ? COPY.replay : COPY.play;
+    // aria-label 跟着按钮语义走：播放 / 暂停 / 重播三态
+    playBtn.setAttribute('aria-label', playing ? COPY.ariaPause : total > 0 && index >= total ? COPY.ariaReplay : COPY.ariaPlay);
     stepText.textContent = COPY.step.replace('{index}', String(index)).replace('{total}', String(total));
     barFill.style.width = total > 0 ? `${Math.round((index / total) * 100)}%` : '0%';
     seekInput.max = String(total);
@@ -290,5 +326,5 @@ export function createControls(host: HTMLElement, handlers: ControlsHandlers): C
 
   const setPass = (text: string): void => { passText.textContent = text; };
 
-  return { setError, setProgress, setPass, setIndexBase, setView };
+  return { setError, setProgress, setPass, setIndexBase, setView, setAlgorithm };
 }

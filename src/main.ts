@@ -8,6 +8,7 @@ import { createBarView } from './views/bar-view';
 import { createStructureView } from './views/structure-view';
 import { createLayout } from './ui/layout';
 import { createControls, type Controls } from './ui/controls';
+import { handleKey } from './ui/keyboard';
 import { renderPseudocode, renderVars, renderCounters, renderActionNote, renderComplexity } from './ui/panels';
 import { renderPassTable } from './ui/pass-table';
 import { COPY } from './copy/zh';
@@ -81,9 +82,24 @@ export function mountApp(root: HTMLElement): void {
 
   const player = createPlayer({ steps, onIndex: renderAt });
 
+  /** 走完一趟所需的「步数」：steps 里 passEnd 的下标 +1，seek 到它恰好停在那一趟末尾 */
+  function passEnds(): number[] {
+    const out: number[] = [];
+    steps.forEach((s, i) => {
+      if (s.kind === 'passEnd') out.push(i + 1);
+    });
+    return out;
+  }
+
+  /** 切换算法的唯一入口：chip 点击、键盘数字键都走这里，避免两份高亮/重建逻辑 */
+  function selectAlgorithm(id: string): void {
+    controls?.setAlgorithm(id);   // 先把高亮落到目标 chip（键盘切算法时没有鼠标点击去点亮它）
+    rebuild(id, data);
+  }
+
   controls = createControls(layout.controlsHost, {
     algorithmIds: listAlgorithms().map((a) => a.id),
-    onAlgorithm: (id) => rebuild(id, data),
+    onAlgorithm: (id) => selectAlgorithm(id),
     onData: (next) => rebuild(algorithmId, next),
     onRandom: () => rebuild(algorithmId, randomData(data.length)),
     onPlayToggle: () => player.toggle(),
@@ -123,6 +139,25 @@ export function mountApp(root: HTMLElement): void {
   rebuild();
   controls?.setIndexBase(indexBase);
   controls?.setView(viewKind);
+
+  // 全局键盘快捷键：空格播放/暂停、←/→ 单步、Shift+←/→ 跳趟、1..9 切算法。
+  // handleKey 在输入框内一律返回 false，所以这里放心 preventDefault（也不会吞掉打字）。
+  window.addEventListener('keydown', (event) => {
+    const handled = handleKey(event, {
+      algorithmIds: listAlgorithms().map((a) => a.id),
+      nextPass: () => passEnds().find((n) => n > player.state.index) ?? null,
+      prevPass: () => {
+        const before = passEnds().filter((n) => n < player.state.index);
+        return before.length > 0 ? before[before.length - 1] : null;
+      },
+      onToggle: () => player.toggle(),
+      onStepForward: () => player.stepForward(),
+      onStepBack: () => player.stepBack(),
+      onSeek: (i) => player.seek(i),
+      onAlgorithm: (id) => selectAlgorithm(id),
+    });
+    if (handled) event.preventDefault();
+  });
 }
 
 function randomData(count: number): number[] {

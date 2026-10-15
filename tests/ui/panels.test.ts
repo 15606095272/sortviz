@@ -9,6 +9,7 @@ import {
 import { COPY } from '../../src/copy/zh';
 import { replay } from '../../src/core/replay';
 import { listAlgorithms, getAlgorithm, resetRegistry } from '../../src/core/registry';
+import { createLayout } from '../../src/ui/layout';
 import { registerBuiltinAlgorithms } from '../../src/algorithms';
 import { quick } from '../../src/algorithms/quick';
 import { INPUT } from '../fixtures/golden';
@@ -126,5 +127,14 @@ describe('变量区渲染', () => {
     expect(host.textContent).toContain(COPY.varLabels.pivot);
     expect(host.textContent).toContain(COPY.varPlaced);
     for (const entry of expected) expect(host.textContent).toContain(entry.value);
+  });
+});
+
+describe('动作说明的无障碍标注', () => {
+  it('动作说明是 aria-live=polite 的组', () => {
+    const root = document.createElement('div');
+    const layout = createLayout(root);
+    expect(layout.noteHost.getAttribute('role')).toBe('group');
+    expect(layout.noteHost.getAttribute('aria-live')).toBe('polite');
   });
 });

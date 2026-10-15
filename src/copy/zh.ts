@@ -83,6 +83,16 @@ export const COPY = {
   errorNotNumber: '有不是数字的内容，请检查输入',
   errorTooLarge: '数值请在 -9999 ~ 9999 之间',
   errorTooLong: '数据过大，步骤已截断（上限 20000 步）',
+  // 无障碍标注：屏幕阅读器读的控件名（图标按钮没有可读文本，必须给 aria-label）
+  ariaData: '数据（用逗号或空格分隔）',
+  ariaSeek: '进度（第几步）',
+  ariaSpeed: '播放速度',
+  ariaReset: '回到开头',
+  ariaStepBack: '单步后退',
+  ariaStepForward: '单步前进',
+  ariaPlay: '播放',
+  ariaPause: '暂停',
+  ariaReplay: '重播',
   // chips 用的短名：9 个算法时全名会把控制行撑爆（实物稿里就是短名）
   algoShort: {
     insertion: '插入',

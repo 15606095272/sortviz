@@ -101,6 +101,9 @@ export function createLayout(root: HTMLElement): Layout {
   const varsHost = el('div', 'stats vars');
   const countersHost = el('div', 'stats counters');
   const noteHost = el('div', 'status');
+  // 动作说明每步都在变：挂 aria-live=polite，屏幕阅读器会在空闲时报出当前动作
+  noteHost.setAttribute('role', 'group');
+  noteHost.setAttribute('aria-live', 'polite');
   const complexityHost = el('div', 'cx');
   statePane.card.append(varsHost, countersHost, noteHost, complexityHost);
 

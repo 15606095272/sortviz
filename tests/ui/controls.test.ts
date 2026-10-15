@@ -115,4 +115,20 @@ describe('控制条', () => {
     expect(caps[1].classList.contains('on')).toBe(true);
     expect(caps[0].classList.contains('on')).toBe(false);
   });
+
+  it('按钮与输入控件都有 aria-label', () => {
+    const { host } = setup();
+    expect((host.querySelector('input.datainput') as HTMLInputElement).getAttribute('aria-label')).toBe(COPY.ariaData);
+    expect((host.querySelector('input.seek') as HTMLInputElement).getAttribute('aria-label')).toBe(COPY.ariaSeek);
+    expect((host.querySelector('input.speed') as HTMLInputElement).getAttribute('aria-label')).toBe(COPY.ariaSpeed);
+  });
+
+  it('算法胶囊可聚焦且能键盘触发（role=button + tabindex=0）', () => {
+    const { host, calls } = setup();
+    const chip = host.querySelector('.chips .chip') as HTMLElement;
+    expect(chip.getAttribute('role')).toBe('button');
+    expect(chip.getAttribute('tabindex')).toBe('0');
+    chip.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    expect(calls).toContain('algo:insertion');
+  });
 });
