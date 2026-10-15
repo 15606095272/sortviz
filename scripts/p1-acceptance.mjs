@@ -155,6 +155,58 @@ console.log(`  变量面板 1 基: ${varsAt1}`);
 check(varsAt0 !== varsAt1, '变量面板里的索引类变量随进制换算', `${varsAt0} → ${varsAt1}`);
 await js(`(() => { const c = [...document.querySelectorAll('.indexbase .chip')].find(x => x.textContent === '0 基'); if (c) c.click(); return 1; })()`);
 
+// —— P2：主视图切换 / 主题 / 快捷键 / 窄屏 ——
+console.log('\n=== P2 功能 ===');
+const key = async (k, code, keyCode, modifiers = 0) => {
+  const base = { key: k, code, windowsVirtualKeyCode: keyCode, nativeVirtualKeyCode: keyCode, modifiers };
+  await send('Input.dispatchKeyEvent', { type: 'keyDown', ...base });
+  await send('Input.dispatchKeyEvent', { type: 'keyUp', ...base });
+};
+
+const cellsArray = await js(`document.querySelectorAll('.cellrow:not(.auxrow) .cell').length`);
+await js(`(() => { [...document.querySelectorAll('.viewswitch .chip')].find(x => x.textContent === '柱状图').click(); return 1 })()`);
+await sleep(250);
+const bars = await js(`document.querySelectorAll('.barcol').length`);
+const heights = await js(`[...document.querySelectorAll('.barcol')].slice(0, 3).map(c => c.style.height)`);
+const legendAfter = await js(`document.querySelectorAll('.legend > span').length`);
+await js(`(() => { [...document.querySelectorAll('.viewswitch .chip')].find(x => x.textContent === '数组').click(); return 1 })()`);
+await sleep(250);
+const cellsBack = await js(`document.querySelectorAll('.cellrow:not(.auxrow) .cell').length`);
+console.log(`  主视图：数组 ${cellsArray} 格 → 柱状图 ${bars} 柱 ${JSON.stringify(heights)} → 数组 ${cellsBack} 格`);
+check(cellsArray === 8 && bars === 8 && cellsBack === 8, '主视图切换（数组 ↔ 柱状图，结构视图保留）', `${cellsArray}/${bars}/${cellsBack}`);
+check(legendAfter === 4, '切换主视图后图例仍在', String(legendAfter));
+check(heights.every((h) => String(h).endsWith('%')), '柱高按百分比计算', JSON.stringify(heights));
+
+const lightBg = await js(`getComputedStyle(document.body).backgroundColor`);
+await js(`(() => { [...document.querySelectorAll('.themeswitch .chip')].find(x => x.textContent === '深色').click(); return 1 })()`);
+await sleep(250);
+const darkState = await js(`({ theme: document.documentElement.dataset.theme, bg: getComputedStyle(document.body).backgroundColor })`);
+await js(`(() => { [...document.querySelectorAll('.themeswitch .chip')].find(x => x.textContent === '浅色').click(); return 1 })()`);
+await sleep(250);
+const backState = await js(`({ theme: document.documentElement.dataset.theme, bg: getComputedStyle(document.body).backgroundColor })`);
+console.log(`  主题：${lightBg} → ${darkState.bg}（${darkState.theme}）→ ${backState.bg}（${backState.theme}）`);
+check(darkState.theme === 'dark' && darkState.bg !== lightBg, '深色主题真的换了底色', `${lightBg} → ${darkState.bg}`);
+check(backState.theme === 'light' && backState.bg === lightBg, '切回浅色恢复原底色', backState.bg);
+
+await js(`document.activeElement instanceof HTMLElement && document.activeElement.blur(); 1`);
+const beforeKey = await stepOf();
+await key('ArrowRight', 'ArrowRight', 39);
+await sleep(200);
+const afterKey = await stepOf();
+check(afterKey === beforeKey + 1, '快捷键 ArrowRight 单步 +1', `${beforeKey} → ${afterKey}`);
+await key('5', 'Digit5', 53);
+await sleep(250);
+const algoNow = await js(`[...document.querySelectorAll('.chips .chip')].find(c => c.classList.contains('on'))?.textContent`);
+check(algoNow === '快排', '数字键 5 切到快排', String(algoNow));
+
+await send('Emulation.setDeviceMetricsOverride', { width: 900, height: 900, deviceScaleFactor: 1, mobile: false });
+await sleep(350);
+const narrow = await js(`({ sw: document.documentElement.scrollWidth, iw: window.innerWidth, cells: document.querySelectorAll('.cellrow:not(.auxrow) .cell').length })`);
+console.log(`  900px：scrollWidth ${narrow.sw} / innerWidth ${narrow.iw} / ${narrow.cells} 格`);
+check(narrow.sw <= narrow.iw, '900px 无横向滚动', `${narrow.sw} vs ${narrow.iw}`);
+check(narrow.cells === 8, '窄屏下总格数不变', String(narrow.cells));
+await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
+
 console.log(`\n=== 结论 ===`);
 if (failures.length === 0) {
   console.log('全部验收项通过 ✓');
