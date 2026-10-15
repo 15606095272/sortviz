@@ -32,7 +32,6 @@ export const quick = {
     const partition = (low: number, high: number): number => {
       const pivot = a[low];
       let i = low;
-      steps.push(markStep('range', range(low, high), 6, `划分区间 [${low}, ${high}]，pivot = a[${low}] = ${pivot}`, [low, high]));
       steps.push(markStep('pivot', [low], 7, `pivot = ${pivot}（取区间第一个元素）`));
       for (let j = low + 1; j <= high; j++) {
         steps.push(compareStep(j, low, 9, `比较 a[${j}]=${a[j]} 与 pivot=${pivot}`));
@@ -52,17 +51,21 @@ export const quick = {
       }
       steps.push(unmarkStep('pivot', [i], 12, `pivot=${pivot} 就位`));
       steps.push(markStep('sorted', [i], 12, `a[${i}]=${pivot} 已就位`));
-      steps.push(unmarkStep('range', range(low, high), 12));
       pass += 1;
       steps.push(passEndStep(a, 12, `第 ${pass} 趟划分结束（区间 [${low}, ${high}]）`));
       return i;
     };
 
+    // range 标记覆盖「整个递归调用」而不是单次 partition：
+    // 这样 replay 的 callStack 就是真正的递归栈，结构视图才能画出嵌套的划分树
+    // （若只在 partition 内进出栈，栈深恒为 1，树永远只有一层）。
     const sort = (low: number, high: number): void => {
       if (low >= high) return;
+      steps.push(markStep('range', range(low, high), 1, `进入区间 [${low}, ${high}]`, [low, high]));
       const p = partition(low, high);
       sort(low, p - 1);
       sort(p + 1, high);
+      steps.push(unmarkStep('range', range(low, high), 5, `区间 [${low}, ${high}] 处理完毕`));
     };
 
     sort(0, a.length - 1);

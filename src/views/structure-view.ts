@@ -32,6 +32,7 @@ export function createStructureView(): ViewModule {
 
   function renderRecursionTree(root: HTMLElement, state: ViewState): void {
     state.callStack.forEach(([lo, hi], depth) => {
+      if (depth > 0) root.append(Object.assign(document.createElement('div'), { className: 'connector' }));
       const level = document.createElement('div');
       level.className = 'tree-level';
       if (depth === state.callStack.length - 1) level.dataset.current = 'true';
@@ -44,6 +45,10 @@ export function createStructureView(): ViewModule {
       level.append(node);
       root.append(level);
     });
+    const footer = document.createElement('div');
+    footer.className = 'tree-footer';
+    footer.textContent = `${COPY.treeDepth} ${state.callStack.length} · ${COPY.treeSplitHint}`;
+    root.append(footer);
   }
 
   function renderHeap(root: HTMLElement, state: ViewState): void {

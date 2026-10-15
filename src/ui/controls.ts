@@ -36,6 +36,7 @@ export interface ControlsHandlers {
 export interface Controls {
   setError(message: string | null): void;
   setProgress(index: number, total: number, speed: number, playing: boolean): void;
+  setPass(text: string): void;         // 进度条右侧的趟次文案（实物稿有，缺省留空）
 }
 
 /** 实物稿里的默认演示数据（数据结构的经典样例序列） */
@@ -44,6 +45,14 @@ const DEFAULT_COUNT = 8;
 const MIN_SPEED = 0.25;
 const MAX_SPEED = 8;
 const SPEED_STEP = 0.25;
+
+/** 把滑块「已走部分」的百分比写进 --fill（theme.css 用它给轨道左侧上色） */
+function setFill(input: HTMLInputElement): void {
+  const min = Number(input.min || '0');
+  const max = Number(input.max || '100');
+  const value = Number(input.value);
+  input.style.setProperty('--fill', max > min ? `${((value - min) / (max - min)) * 100}%` : '0%');
+}
 
 function mk(tag: string, className?: string, text?: string): HTMLElement {
   const node = document.createElement(tag);
@@ -140,8 +149,10 @@ export function createControls(host: HTMLElement, handlers: ControlsHandlers): C
 
   const countInput = rangeInput('count', MIN_COUNT, MAX_COUNT, 1, DEFAULT_COUNT);
   const countValue = mk('span', 'countval', String(DEFAULT_COUNT));
+  setFill(countInput);
   countInput.addEventListener('input', () => {
     countValue.textContent = countInput.value;
+    setFill(countInput);
   });
   countInput.addEventListener('change', () => {
     setError(null);
@@ -173,9 +184,11 @@ export function createControls(host: HTMLElement, handlers: ControlsHandlers): C
 
   const speedInput = rangeInput('speed', MIN_SPEED, MAX_SPEED, SPEED_STEP, 1);
   const speedValue = mk('span', 'speedval', '1×');
+  setFill(speedInput);
   speedInput.addEventListener('input', () => {
     const multiplier = Number(speedInput.value);
     speedValue.textContent = `${multiplier}×`;
+    setFill(speedInput);
     handlers.onSpeed(multiplier);
   });
 
@@ -196,8 +209,9 @@ export function createControls(host: HTMLElement, handlers: ControlsHandlers): C
   const barFill = document.createElement('i');
   bar.append(barFill);
   const stepText = mk('span', 'steptext', COPY.step.replace('{index}', '0').replace('{total}', '0'));
+  const passText = mk('span', 'passtext');
   const ptext = mk('div', 'ptext');
-  ptext.append(stepText);
+  ptext.append(stepText, passText);
   const seekInput = rangeInput('seek', 0, 0, 1, 0);
   seekInput.addEventListener('input', () => handlers.onSeek(Number(seekInput.value)));
   progress.append(bar, ptext, seekInput);
@@ -213,9 +227,13 @@ export function createControls(host: HTMLElement, handlers: ControlsHandlers): C
     barFill.style.width = total > 0 ? `${Math.round((index / total) * 100)}%` : '0%';
     seekInput.max = String(total);
     seekInput.value = String(Math.min(index, total));
+    setFill(seekInput);
     speedInput.value = String(speed);
     speedValue.textContent = `${speed}×`;
+    setFill(speedInput);
   };
 
-  return { setError, setProgress };
+  const setPass = (text: string): void => { passText.textContent = text; };
+
+  return { setError, setProgress, setPass };
 }

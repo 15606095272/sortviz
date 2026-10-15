@@ -32,6 +32,21 @@ describe('快速排序（王道前后指针版 partition）', () => {
     }
   });
 
+  it('递归划分树会嵌套：子区间处理期间父区间仍在栈上', () => {
+    // 这是「结构视图能长出树」的护栏：若 range 标记只在单次 partition 内进出栈，
+    // 栈深恒为 1，结构视图永远只有一层（本用例会红）。
+    const steps = quick.run(INPUT);
+    const depths = steps.map((_, k) => replay(INPUT, steps, k + 1).callStack.length);
+    const maxDepth = Math.max(...depths);
+    expect(maxDepth).toBeGreaterThanOrEqual(2);
+    const deepestAt = depths.indexOf(maxDepth);
+    const stack = replay(INPUT, steps, deepestAt + 1).callStack;
+    const outer = stack[0];
+    const inner = stack[stack.length - 1];
+    expect(outer[0]).toBeLessThanOrEqual(inner[0]);
+    expect(outer[1]).toBeGreaterThanOrEqual(inner[1]);
+  });
+
   it('子区间进出成对：结束时递归栈为空', () => {
     const steps = quick.run(INPUT);
     expect(replay(INPUT, steps, steps.length).callStack).toEqual([]);

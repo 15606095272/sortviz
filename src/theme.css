@@ -1,111 +1,88 @@
 /* sortviz —— 唯一色值来源（柔和卡片风：米白 + 橄榄 / 奶茶 / 砖红）
-   后续所有界面颜色必须引用这里的语义 token，不得在组件里写死色值。 */
+   数值与观感对齐实物稿 docs/superpowers/mockups/2026-10-15-sortviz-mockup-c-soft.html
+   规则：所有色值只在本文件的 token 里出现，组件与视图一律引用 var(--x)。 */
+
 :root {
   --bg: #f6f1e8;
   --card: #fffdf9;
   --line: #e9dfd1;
   --line2: #f2ebe0;
+  --line-strong: #e5d9c8;                     /* 分隔条 / 结构连线 */
   --text: #3a332a;
+  --text-strong: #4a4032;                     /* 格子数字 / 等宽数值 */
+  --text-head: #5d5344;                       /* 卡片标题 */
   --muted: #8d8271;
+  --idx-color: #c0b5a3;                       /* 伪代码行号 */
   --radius: 16px;
+  --radius-sm: 10px;
+  --radius-pill: 999px;
 
   /* 状态语义色 */
   --c-default-bg: #fdfaf4;
   --c-default-line: #e9dfd1;
   --c-comparing: #c2915f;
   --c-comparing-bg: #fbeee4;
+  --c-comparing-line: #e8c8ae;
   --c-swapping: #b5654a;
   --c-pivot: #8d6a8f;
   --c-pivot-bg: #f2eaf3;
+  --c-pivot-line: #d6c2d8;
   --c-sorted: #7d8f69;
   --c-sorted-bg: #eef3e9;
+  --c-sorted-line: #c6d6b8;
   --c-aux: #6b8ea8;
   --c-accent: #7d8f69;
+  --text-on-accent: #ffffff;
+
+  /* 面 / 底 */
+  --c-soft: #fbf7f0;                          /* 胶囊、节点底、stat 底 */
+  --c-track: #ece2d3;                         /* 滑块轨道 */
+  --c-bar: #b5654a;                           /* 进度条已走进度 */
+  --c-hl-bg: #fbf0e3;                         /* 伪代码当前行底 */
+  --c-row-now-bg: #fbf3e9;                    /* 每趟结果当前行底 */
 
   --gap: 12px;
-
-  /* 装配层补充的 token（同样只在本文件里出现色值） */
-  --text-on-accent: #ffffff;                  /* 实底按钮 / 高亮胶囊上的字色 */
-  --radius-sm: 10px;                          /* 控件、格子、小胶囊圆角 */
-  --radius-pill: 999px;                       /* 胶囊 */
-  --cell-w: 56px;                             /* 数组格子（含指针槽）的列宽 */
+  --cell-w: 58px;                             /* 数组格子（含指针槽）列宽 */
   --shadow-card: 0 1px 2px rgba(90, 70, 40, 0.04), 0 10px 26px -20px rgba(90, 70, 40, 0.35);
-  --shadow-ring: 0 0 0 3px rgba(194, 145, 95, 0.18);   /* 当前参与比较的格子外圈 */
+  --shadow-ring: 0 0 0 3px #f7e9d8;           /* 当前参与比较的格子外圈 */
 
   --sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
     "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;
   --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
-/* 状态标记（data-mark 允许空格分隔的多个标记） */
-.cell[data-mark~="sorted"] {
-  background: var(--c-sorted-bg);
-  border-color: #c6d6b8;
-}
-.cell[data-mark~="comparing"] {
-  background: var(--c-comparing-bg);
-  border-color: #e8c8ae;
-}
-.cell[data-mark~="pivot"] {
-  background: var(--c-pivot-bg);
-  border-color: #d6c2d8;
-}
+* { box-sizing: border-box; }
 
-/* 最基础排版 */
-html,
 body {
   margin: 0;
-  padding: 0;
-}
-
-body {
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC",
-    "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;
-  font-size: 16px;
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
+  font: 14px/1.55 var(--sans);
 }
 
-/* =========================================================================
-   装配层样式（Task 11b）：卡片骨架 / 控制条 / 双视图 / 底部三卡 / 状态区
-   只消费上面的语义 token，不出现任何字面色值。
-   ========================================================================= */
-
-* {
-  box-sizing: border-box;
-}
-html,
-body {
-  height: 100%;
-}
-
-/* —— 整体骨架：纵向卡片流 —— */
+/* ── 整体骨架（实物稿：整屏纵向 flex，主区吃掉剩余高度） ───────────── */
 .app {
   display: flex;
   flex-direction: column;
-  gap: var(--gap);
   min-height: 100vh;
-  min-width: 1080px;
-  padding: 16px 20px 0;
-  font-family: var(--sans);
-  font-size: 14px;
-  line-height: 1.55;
+  min-width: 1180px;
+  padding: 16px 20px 16px;
+  gap: var(--gap);
 }
 
 header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 0 4px;
+  gap: var(--gap);
 }
+
 h1 {
   margin: 0;
   font-size: 18px;
   font-weight: 650;
   letter-spacing: 0.3px;
 }
+
 h1 em {
   font-style: normal;
   font-size: 13px;
@@ -114,7 +91,14 @@ h1 em {
   margin-left: 8px;
 }
 
-/* —— 卡片 —— */
+main {
+  flex: 1;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: var(--gap);
+  min-height: 0;
+}
+
 .card {
   background: var(--card);
   border: 1px solid var(--line);
@@ -122,61 +106,67 @@ h1 em {
   box-shadow: var(--shadow-card);
 }
 
-/* —— 控制卡 —— */
+/* ── 控制卡（第一行控件，第二行整条进度） ────────────────────────── */
 .ctrl {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
   padding: 12px 16px;
+  flex-wrap: wrap;
 }
+
 .ctrl-inner {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--gap);
   flex-wrap: wrap;
+  width: 100%;
 }
+
 .ctrlgroup {
   display: flex;
   align-items: center;
   gap: 8px;
 }
+
 .sep {
   width: 1px;
   height: 22px;
-  background: var(--line);
-  flex: 0 0 1px;
+  background: var(--line-strong);
 }
+
 .lab {
   font-size: 12px;
   color: var(--muted);
-  white-space: nowrap;
 }
+
 .err {
-  flex-basis: 100%;
+  width: 100%;
   font-size: 12px;
   color: var(--c-swapping);
 }
-.err:empty {
-  display: none;
-}
 
-/* 算法 chips：默认描边，选中 = 橄榄实底白字 */
+.err:empty { display: none; }
+
 .chips {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
 }
+
 .chip {
   padding: 6px 11px;
   border-radius: var(--radius-pill);
   border: 1px solid var(--line);
-  background: var(--c-default-bg);
+  background: var(--c-soft);
   font-size: 13px;
   color: var(--muted);
   cursor: pointer;
   user-select: none;
-  transition: background 0.12s linear, color 0.12s linear, border-color 0.12s linear;
 }
-.chip:hover {
-  border-color: var(--muted);
-}
+
+.chip:hover { border-color: var(--c-accent); }
+
 .chip.on {
   background: var(--c-accent);
   border-color: var(--c-accent);
@@ -184,7 +174,6 @@ h1 em {
   font-weight: 600;
 }
 
-/* 输入框与滑块 */
 input[type="text"].datainput {
   font-family: var(--mono);
   font-size: 12.5px;
@@ -196,20 +185,30 @@ input[type="text"].datainput {
   border-radius: var(--radius-sm);
   color: var(--text);
 }
+
 input[type="text"].datainput:focus {
   outline: none;
   border-color: var(--c-accent);
+  box-shadow: var(--shadow-ring);
 }
+
+/* 滑块：细轨 + 已走部分用 --fill 着色 + 白底彩环圆钮（实物稿观感）
+   --fill 由 controls.ts 在 input 时写入百分比；色值仍只来自 token。 */
 input[type="range"] {
-  appearance: none;
   -webkit-appearance: none;
+  appearance: none;
   width: 110px;
   height: 5px;
   margin: 0;
   border-radius: 3px;
-  background: var(--line2);
-  outline: none;
+  background: linear-gradient(
+    to right,
+    var(--c-comparing) 0 var(--fill, 0%),
+    var(--c-track) var(--fill, 0%) 100%
+  );
+  cursor: pointer;
 }
+
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 13px;
@@ -217,28 +216,24 @@ input[type="range"]::-webkit-slider-thumb {
   border-radius: 50%;
   background: var(--card);
   border: 2px solid var(--c-comparing);
-  cursor: pointer;
 }
+
 input[type="range"]::-moz-range-thumb {
   width: 13px;
   height: 13px;
   border-radius: 50%;
   background: var(--card);
   border: 2px solid var(--c-comparing);
-  cursor: pointer;
 }
-input[type="range"].seek {
-  width: 100%;
-}
-.countval,
-.speedval {
-  min-width: 34px;
+
+.speedval,
+.countval {
   font-family: var(--mono);
   font-size: 12px;
   color: var(--muted);
+  min-width: 22px;
 }
 
-/* 按钮：默认描边，主按钮橄榄，播放键奶茶 */
 button {
   font: inherit;
   font-size: 13px;
@@ -248,20 +243,18 @@ button {
   background: var(--c-default-bg);
   color: var(--text);
   cursor: pointer;
-  transition: background 0.12s linear, border-color 0.12s linear;
 }
-button:hover {
-  background: var(--line2);
-}
+
+button:hover { border-color: var(--c-accent); }
+
 button.pri {
   background: var(--c-accent);
   border-color: var(--c-accent);
   color: var(--text-on-accent);
 }
-button.pri:hover {
-  background: var(--c-sorted);
-  border-color: var(--c-sorted);
-}
+
+button.pri:hover { filter: brightness(1.05); }
+
 button.play {
   background: var(--c-comparing);
   border-color: var(--c-comparing);
@@ -269,169 +262,223 @@ button.play {
   font-weight: 600;
   padding: 7px 20px;
 }
-button.play:hover {
-  background: var(--c-swapping);
-  border-color: var(--c-swapping);
-}
+
+button.play:hover { filter: brightness(1.05); }
+
 button.ic {
-  padding: 7px 10px;
   font-family: var(--mono);
+  padding: 7px 11px;
 }
 
-/* 进度区 */
+/* 进度：整条占满，进度条 + 文案左右分列；拖动用的 range 叠在进度条上（透明） */
 .progress {
-  flex: 1;
-  min-width: 180px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  position: relative;
+  flex: 1 0 100%;                            /* 独占一行：实物稿里进度条横跨整张控制卡 */
+  min-width: 240px;
 }
+
+.passtext {
+  font-family: var(--mono);
+  letter-spacing: 0.2px;
+}
+
 .bar {
   height: 5px;
+  background: var(--c-track);
   border-radius: 3px;
-  background: var(--line2);
-  overflow: hidden;
+  position: relative;
+  margin-bottom: 6px;
 }
+
 .bar i {
-  display: block;
-  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 5px;
   width: 0;
-  background: var(--c-swapping);
+  background: var(--c-bar);
   border-radius: 3px;
-  transition: width 0.12s linear;
 }
+
 .ptext {
   display: flex;
   justify-content: space-between;
   font-size: 12px;
   color: var(--muted);
 }
+
 .steptext {
   font-family: var(--mono);
+  letter-spacing: 0.2px;
 }
 
-/* —— 主区：上半双视图 + 下半三卡 —— */
-main {
-  flex: 1;
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
-  gap: var(--gap);
-  min-height: 0;
+input[type="range"].seek {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  width: 100%;
+  height: 5px;
+  background: transparent;
+  opacity: 0;
 }
+
+input[type="range"].seek::-webkit-slider-thumb { opacity: 0; }
+input[type="range"].seek::-moz-range-thumb { opacity: 0; }
+
+/* ── 双视图区与底部三卡 ─────────────────────────────────────────── */
 .views {
   display: grid;
-  grid-template-columns: 1fr 1fr;   /* 两列等宽 */
+  grid-template-columns: 1fr 1fr;
   gap: var(--gap);
   min-height: 0;
 }
+
 .bottom {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;   /* 底部三卡三等分 */
+  grid-template-columns: 1.35fr 1fr 1fr;
   gap: var(--gap);
-  align-items: start;
-  padding-bottom: 16px;
 }
 
-/* —— 卡片内容区与标题 —— */
 .pane {
   padding: 12px 16px 16px;
   display: flex;
   flex-direction: column;
   min-height: 0;
 }
-.pane.tight {
-  padding: 10px 14px 12px;
-}
+
+.pane.tight { padding: 10px 14px 12px; }
+
 .pane h2 {
   margin: 0 0 12px;
   font-size: 13px;
   font-weight: 600;
-  color: var(--text);
+  color: var(--text-head);
   display: flex;
   align-items: center;
   gap: 8px;
 }
+
 .pane h2 .tag {
   margin-left: auto;
   font-size: 11px;
   font-weight: 400;
   color: var(--muted);
 }
+
+/* ── 数组视图 ───────────────────────────────────────────────────── */
 .arraywrap,
 .structwrap {
   flex: 1;
-  min-height: 132px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  overflow: auto;
+  min-height: 0;
 }
 
-/* —— 数组视图：下标行 + 格子 + 指针行 —— */
 .cellrow {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  gap: 8px;
 }
+
 .idxrow {
   display: flex;
 }
+
 .cellbox {
-  flex: 0 0 var(--cell-w);
   width: var(--cell-w);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  text-align: center;
 }
+
 .idxnum {
   font-family: var(--mono);
   font-size: 11px;
   color: var(--muted);
 }
+
 .cell {
+  height: var(--cell-w);
   margin: 3px;
-  height: 58px;
-  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--c-default-bg);
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--c-default-line);
-  border-radius: var(--radius-sm);
-  background: var(--c-default-bg);
   font-family: var(--mono);
   font-size: 18px;
   font-weight: 600;
-  color: var(--text);
-  transition: background 0.12s linear, border-color 0.12s linear, box-shadow 0.12s linear;
+  color: var(--text-strong);
 }
-/* 参与比较的格子加一圈极浅的环（底色/描边已由 data-mark 规则给定） */
+
+.cell[data-mark~="sorted"] {
+  background: var(--c-sorted-bg);
+  border-color: var(--c-sorted-line);
+}
+
 .cell[data-mark~="comparing"] {
+  background: var(--c-comparing-bg);
+  border-color: var(--c-comparing-line);
   box-shadow: var(--shadow-ring);
 }
+
+.cell[data-mark~="pivot"] {
+  background: var(--c-pivot-bg);
+  border-color: var(--c-pivot-line);
+  box-shadow: 0 0 0 3px var(--c-pivot-bg);
+}
+
 .ptrs {
   display: flex;
   height: 28px;
 }
+
 .ptr {
-  flex: 0 0 var(--cell-w);
   width: var(--cell-w);
-  margin: 0 3px;
   text-align: center;
-  font-family: var(--mono);
   font-size: 11px;
-  line-height: 18px;
-  border-radius: var(--radius-pill);
-  color: var(--muted);
-}
-/* 有内容的指针槽 = 与格子等宽的胶囊（array-view 里指针文案是纯文本，故胶囊宽度按列宽对齐） */
-.ptr:not(:empty) {
-  background: var(--c-swapping);
-  color: var(--text-on-accent);
 }
 
-/* —— 结构视图：递归层 / 堆节点 / 有序区条 —— */
+.ptr .pl {
+  display: inline-block;
+  padding: 1px 7px;
+  margin: 0 1px;
+  border-radius: 6px;
+  color: var(--text-on-accent);
+  font-family: var(--mono);
+}
+
+.ptr .pl-i { background: var(--c-swapping); }
+.ptr .pl-j { background: var(--c-aux); }
+.ptr .pl-pivot { background: var(--c-pivot); }
+
+.legend {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--muted);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.legend .dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  display: inline-block;
+  margin-right: 5px;
+  vertical-align: -1px;
+}
+
+.legend .dot.d-sorted { background: var(--c-sorted-line); }
+.legend .dot.d-comparing { background: var(--c-comparing-line); }
+.legend .dot.d-pivot { background: var(--c-pivot-line); }
+.legend .dot.d-default { background: var(--line); }
+
+/* ── 结构视图 ───────────────────────────────────────────────────── */
 .structure-view .hint {
   margin: 0;
   color: var(--muted);
@@ -439,212 +486,216 @@ main {
   text-align: center;
 }
 
-.structure-view {
-  display: flex;
-  flex-direction: row;            /* 覆盖 .arraywrap/.structwrap 的 column：有序区提示要横排 */
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  align-content: center;
-  gap: 12px;
-}
 .tree-level {
-  flex: 1 0 100%;
   display: flex;
   justify-content: center;
   gap: 10px;
 }
+
 .tree-node {
   padding: 8px 12px;
-  min-width: 74px;
-  max-width: 100%;
-  border: 1px solid var(--line);
   border-radius: 12px;
-  background: var(--c-default-bg);
+  border: 1px solid var(--line);
+  background: var(--c-soft);
   font-family: var(--mono);
   font-size: 12px;
-  color: var(--text);
+  color: var(--text-strong);
   text-align: center;
-  overflow-wrap: anywhere;
+  min-width: 74px;
 }
+
 .tree-node small {
   display: block;
-  font-family: var(--sans);
   font-size: 10px;
   color: var(--muted);
+  font-family: inherit;
 }
-/* 当前划分层：橄榄底 + 左侧强调边 */
+
 .tree-level[data-current="true"] .tree-node {
-  background: var(--c-sorted-bg);
+  background: var(--c-accent);
   border-color: var(--c-accent);
-  box-shadow: inset 3px 0 0 var(--c-accent);
+  color: var(--text-on-accent);
 }
-.tree-level[data-current="true"] .tree-node small {
-  color: var(--c-sorted);
+
+.tree-level[data-current="true"] .tree-node small { color: var(--c-sorted-bg); }
+
+.connector {
+  height: 1px;
+  background: var(--line-strong);
+  margin: 0 12%;
 }
-/* 堆：按层依次排布的节点胶囊，节点下方以极小的下标标注数组位置 */
-.heap-node {
-  position: relative;
-  min-width: 44px;
-  padding: 8px 10px 16px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--c-default-bg);
-  font-family: var(--mono);
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text);
+
+.tree-footer {
+  font-size: 12px;
+  color: var(--muted);
   text-align: center;
 }
+
+/* 堆：按层排布的小胶囊，节点下方标数组下标（不画连线） */
+.heap-node {
+  position: relative;
+  padding: 8px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--c-soft);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-strong);
+}
+
 .heap-node::after {
   content: attr(data-index);
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 2px;
+  bottom: -14px;
+  text-align: center;
   font-size: 10px;
   font-weight: 400;
   color: var(--muted);
 }
+
 .heap-node[data-index="0"] {
-  background: var(--c-sorted-bg);
+  background: var(--c-accent);
   border-color: var(--c-accent);
-}
-/* 有序区 / 待处理区 */
-.zone {
-  min-width: 46px;
-  padding: 10px 8px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  font-family: var(--mono);
-  font-size: 15px;
-  font-weight: 600;
-  text-align: center;
-}
-.zone[data-zone="sorted"] {
-  background: var(--c-sorted-bg);
-  border-color: var(--c-sorted);
-  color: var(--c-sorted);
-}
-.zone[data-zone="unsorted"] {
-  background: var(--c-default-bg);
-  border-color: var(--c-default-line);
-  color: var(--muted);
+  color: var(--text-on-accent);
 }
 
-/* —— 伪代码 —— */
+/* 有序区条 */
+.zone {
+  padding: 8px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.zone[data-zone="sorted"] {
+  background: var(--c-sorted-bg);
+  border-color: var(--c-sorted-line);
+  color: var(--text-strong);
+}
+
+.zone[data-zone="unsorted"] {
+  background: var(--c-default-bg);
+  color: var(--text-strong);
+}
+
+/* ── 伪代码 ─────────────────────────────────────────────────────── */
 .code {
   margin: 0;
-  font-family: var(--mono);
-  font-size: 12.5px;
-  line-height: 1.75;
+  font: 12.5px/1.75 var(--mono);
+  overflow: auto;
 }
+
 .code .ln {
   display: block;
-  position: relative;
   padding: 0 8px 0 34px;
-  border-radius: 4px;
-  color: var(--text);
+  position: relative;
+  color: var(--text-head);
   white-space: pre;
 }
+
 .code .ln b {
   position: absolute;
   left: 0;
   width: 24px;
   text-align: right;
-  color: var(--muted);
+  color: var(--idx-color);
   font-weight: 400;
 }
+
 .code .ln.hl {
-  background: var(--c-comparing-bg);
+  background: var(--c-hl-bg);
   box-shadow: inset 3px 0 0 var(--c-comparing);
+  border-radius: 4px;
 }
 
-/* —— 每趟结果表 —— */
-.passtable {
-  overflow: auto;
-  max-height: 32vh;
-}
+/* ── 每趟结果 ───────────────────────────────────────────────────── */
+.passtable { overflow: auto; }
+
 .passtable table {
   width: 100%;
   border-collapse: collapse;
   font-size: 12.5px;
 }
+
 .passtable th,
 .passtable td {
   padding: 6px 8px;
   text-align: left;
   border-bottom: 1px solid var(--line2);
-  white-space: nowrap;
 }
+
 .passtable th {
   font-size: 11px;
-  font-weight: 500;
   color: var(--muted);
+  font-weight: 500;
 }
+
 .mono {
   font-family: var(--mono);
-  color: var(--text);
+  color: var(--text-strong);
   letter-spacing: 0.4px;
 }
-.passtable tr.now td {
-  background: var(--c-comparing-bg);
+
+.passtable tr.now td { background: var(--c-row-now-bg); font-weight: 600; }
+.passtable tr.empty td { color: var(--muted); border-bottom: none; }
+
+/* ── 状态卡（变量 / 计数器 / 动作说明 / 复杂度） ─────────────────── */
+.stats {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
-.passtable tr.empty td {
+
+.stats.counters { padding-top: 8px; }
+
+.stat {
+  background: var(--c-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+  font-size: 12px;
   color: var(--muted);
 }
 
-/* —— 状态卡：变量 / 计数器 / 当前动作 / 复杂度 —— */
-.stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding-top: 8px;
-}
-.stats.counters {
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px dashed var(--line2);
-}
-.stat {
-  padding: 5px 10px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--c-default-bg);
-  font-size: 12px;
-  color: var(--muted);
-  white-space: nowrap;
-}
 .stat b {
-  margin-left: 4px;
+  color: var(--text-strong);
   font-family: var(--mono);
   font-size: 13px;
-  color: var(--text);
 }
+
 .status {
   padding-top: 10px;
   font-size: 12.5px;
-  color: var(--text);
-  min-height: 18px;
+  color: var(--text-head);
+  line-height: 1.6;
 }
+
 .cx {
   margin-top: 10px;
   padding-top: 8px;
   border-top: 1px solid var(--line2);
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 2px 12px;
-}
-.cxrow {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 11.5px;
-  color: var(--muted);
-}
-.cxrow b {
-  font-family: var(--mono);
-  font-weight: 600;
-  color: var(--text);
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 16px;
 }
 
+.cxrow {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.cxrow .k { color: var(--muted); }
+
+.cxrow b {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-strong);
+}

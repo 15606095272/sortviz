@@ -32,6 +32,12 @@ export function mountApp(root: HTMLElement): void {
     const state = replay(data, steps, index);
     getView('array')?.render(state, ctx);
     getView('structure')?.render(state, ctx);
+    // 卡片右上角标签（实物稿里是「下标 0 – 7」「快排 → 递归划分树」这类动态说明）
+    layout.arrayTag.textContent = COPY.indexRange
+      .replace('{from}', '0')
+      .replace('{to}', String(Math.max(data.length - 1, 0)));
+    layout.structTag.textContent =
+      (COPY.structureTag as Record<string, string>)[algorithmId] ?? COPY.structureTagDefault;
     // 第 0 步还没执行任何一步，state.lastCodeLine 是 0（哨兵值，伪代码里没有第 0 行）。
     // 此时回落到本算法的第一行伪代码，避免「当前执行行已高亮」的标签下没有任何高亮行。
     const activeLine = state.lastCodeLine || algo.pseudocode[0]?.line || 0;
@@ -42,6 +48,15 @@ export function mountApp(root: HTMLElement): void {
     renderComplexity(layout.complexityHost, algo.complexity, algo.stable);
     const passes = derivePasses(steps, index);
     renderPassTable(layout.passesHost, data, passes, passes.length > 0 ? passes.length : null);
+    const passNo = passes.length;
+    const depth = String(state.callStack.length);
+    layout.stateTag.textContent =
+      passNo > 0
+        ? COPY.stateTagPass.replace('{pass}', String(passNo)).replace('{depth}', depth)
+        : index > 0
+          ? COPY.stateTagProgress.replace('{depth}', depth)
+          : COPY.stateTagStart;
+    controls?.setPass(passNo > 0 ? COPY.pass.replace('{pass}', String(passNo)) : '');
     controls?.setProgress(index, steps.length, player.state.speed, player.state.playing);
   };
 

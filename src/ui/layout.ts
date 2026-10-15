@@ -3,6 +3,9 @@ import { COPY } from '../copy/zh';
 /** 界面骨架暴露给装配层的挂载点（main.ts / 面板渲染函数往这些容器里注入内容） */
 export interface Layout {
   controlsHost: HTMLElement;    // 控制卡内部容器（控件由 controls.ts 注入）
+  arrayTag: HTMLElement;        // 左卡标题右侧标签（下标范围，动态）
+  structTag: HTMLElement;       // 右卡标题右侧标签（当前算法的结构说明，动态）
+  stateTag: HTMLElement;        // 状态卡标题右侧标签（趟次 / 递归深度，动态）
   arrayHost: HTMLElement;       // 左卡「数组视图」的内容区
   structHost: HTMLElement;      // 右卡「结构视图」的内容区
   pseudoHost: HTMLElement;      // 伪代码卡内容区
@@ -20,13 +23,31 @@ function el(tag: string, className?: string, text?: string): HTMLElement {
   return node;
 }
 
-/** 卡片标题：左侧文案（来自 COPY）+ 右侧小标签（tagText 省略时留空，由后续任务补） */
-function pane(title: string, tight = false, tagText?: string): HTMLElement {
+/** 卡片标题：左侧文案（来自 COPY）+ 右侧小标签（返回 tag 供装配层动态填内容） */
+function pane(title: string, tight = false, tagText?: string): { card: HTMLElement; tag: HTMLElement } {
   const card = el('div', tight ? 'card pane tight' : 'card pane');
   const h2 = el('h2', undefined, title);
-  h2.append(el('span', 'tag', tagText));
+  const tag = el('span', 'tag', tagText);
+  h2.append(tag);
   card.append(h2);
-  return card;
+  return { card, tag };
+}
+
+/** 数组视图底部的状态图例（与 .cell 的 data-mark 颜色一一对应） */
+function legend(): HTMLElement {
+  const box = el('div', 'legend');
+  const items: Array<[string, string]> = [
+    ['d-sorted', COPY.legendSorted],
+    ['d-comparing', COPY.legendComparing],
+    ['d-pivot', COPY.legendPivot],
+    ['d-default', COPY.legendDefault],
+  ];
+  for (const [dotClass, text] of items) {
+    const span = el('span');
+    span.append(el('i', `dot ${dotClass}`), document.createTextNode(text));
+    box.append(span);
+  }
+  return box;
 }
 
 /**
@@ -53,34 +74,37 @@ export function createLayout(root: HTMLElement): Layout {
   const main = el('main');
 
   const views = el('div', 'views');
-  const arrayCard = pane(COPY.arrayView);
-  const arrayHost = el('div', 'arraywrap');
-  arrayCard.append(arrayHost);
+  // 数组卡：居中区里放「数组挂载点 + 图例」，图例不会被视图的 mount 清空
+  const arrayPane = pane(COPY.arrayView);
+  const arrayWrap = el('div', 'arraywrap');
+  const arrayHost = el('div');
+  arrayWrap.append(arrayHost, legend());
+  arrayPane.card.append(arrayWrap);
 
-  const structCard = pane(COPY.structureView);
+  const structPane = pane(COPY.structureView);
   const structHost = el('div', 'structwrap');
-  structCard.append(structHost);
+  structPane.card.append(structHost);
 
-  views.append(arrayCard, structCard);
+  views.append(arrayPane.card, structPane.card);
 
   const bottom = el('div', 'bottom');
 
-  const pseudoCard = pane(COPY.panelPseudo, true, COPY.panelPseudoTag);
+  const pseudoPane = pane(COPY.panelPseudo, true, COPY.panelPseudoTag);
   const pseudoHost = el('pre', 'code');
-  pseudoCard.append(pseudoHost);
+  pseudoPane.card.append(pseudoHost);
 
-  const passesCard = pane(COPY.panelPasses, true, COPY.panelPassesTag);
+  const passesPane = pane(COPY.panelPasses, true, COPY.panelPassesTag);
   const passesHost = el('div', 'passtable');
-  passesCard.append(passesHost);
+  passesPane.card.append(passesHost);
 
-  const stateCard = pane(COPY.panelState, true);
+  const statePane = pane(COPY.panelState, true);
   const varsHost = el('div', 'stats vars');
   const countersHost = el('div', 'stats counters');
   const noteHost = el('div', 'status');
   const complexityHost = el('div', 'cx');
-  stateCard.append(varsHost, countersHost, noteHost, complexityHost);
+  statePane.card.append(varsHost, countersHost, noteHost, complexityHost);
 
-  bottom.append(pseudoCard, passesCard, stateCard);
+  bottom.append(pseudoPane.card, passesPane.card, statePane.card);
 
   main.append(views, bottom);
   app.append(header, controlCard, main);
@@ -88,6 +112,9 @@ export function createLayout(root: HTMLElement): Layout {
 
   return {
     controlsHost,
+    arrayTag: arrayPane.tag,
+    structTag: structPane.tag,
+    stateTag: statePane.tag,
     arrayHost,
     structHost,
     pseudoHost,

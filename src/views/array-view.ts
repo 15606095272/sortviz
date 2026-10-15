@@ -69,7 +69,16 @@ export function createArrayView(): ViewModule {
       if (state.activeIndices.includes(i)) marks.add('comparing');
       cell.dataset.mark = [...marks].join(' ');
       const ptr = ptrs[i];
-      if (ptr) ptr.textContent = (pointerLabels.get(i) ?? []).join(' ');
+      if (ptr) {
+        // 每个指针一个彩色药丸：颜色由 theme.css 按 pl-i / pl-j / pl-pivot 给
+        ptr.textContent = '';
+        for (const label of pointerLabels.get(i) ?? []) {
+          const pill = document.createElement('span');
+          pill.className = `pl pl-${label}`;
+          pill.textContent = label;
+          ptr.append(pill);
+        }
+      }
     }
   }
 
