@@ -7,6 +7,7 @@ import { quick } from './quick';
 import { selection } from './selection';
 import { heap } from './heap';
 import { merge } from './merge';
+import { radix } from './radix';
 
 export function registerBuiltinAlgorithms(): void {
   registerAlgorithm(insertion);
@@ -17,4 +18,5 @@ export function registerBuiltinAlgorithms(): void {
   registerAlgorithm(selection);
   registerAlgorithm(heap);
   registerAlgorithm(merge);
+  registerAlgorithm(radix);
 }

@@ -47,14 +47,14 @@ describe('注册表', () => {
     }
   });
 
-  it.skip('内置注册后 9 种算法齐全且顺序固定（插入/折半插入/希尔/冒泡/快排/选择/堆/归并/基数）', () => {
+  it('内置注册后 9 种算法齐全且顺序固定（插入/折半插入/希尔/冒泡/快排/选择/堆/归并/基数）', () => {
     registerBuiltinAlgorithms();
     expect(listAlgorithms().map((a) => a.id)).toEqual([
       'insertion', 'binary-insertion', 'shell', 'bubble', 'quick', 'selection', 'heap', 'merge', 'radix',
     ]);
   });
 
-  it.skip('每个内置算法的伪代码行号唯一且 cover 到默认视图', () => {
+  it('每个内置算法的伪代码行号唯一且 cover 到默认视图', () => {
     registerBuiltinAlgorithms();
     for (const algo of listAlgorithms()) {
       const lines = algo.pseudocode.map((l) => l.line);
