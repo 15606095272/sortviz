@@ -25,7 +25,7 @@ export const GOLDEN = {
       [13, 27, 38, 49, 49, 65, 76, 97],
       [13, 27, 38, 49, 49, 65, 76, 97],
     ],
-    inputCompares: 42,
+    inputCompares: 27,             // 逐趟收缩区间：7+6+5+4+3+2（第 6 趟零交换后结束）
     reversedCompares: 28,
     reversedPasses: 7,
   },
