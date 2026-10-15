@@ -8,17 +8,17 @@ export interface VarEntry { label: string; value: string }
 /** 取不到的量一律显示占位符，绝不从解说文本里猜数字 */
 const DASH = '—';
 
-/** 算法态变量名（COPY 只管界面固定文案，这些是推导结果的字段名，集中在此以免散落到处） */
+/** 变量名一律取自 COPY（界面文案唯一来源，组件里不得硬编码中文） */
 const VAR = {
-  depth: '递归深度',
-  placed: '已就位',
-  heapSize: '堆大小',
-  pivot: 'pivot',
-  low: 'low',
-  high: 'high',
-  j: 'j',
-  i: 'i（空位）',
-  key: 'key',
+  depth: COPY.varDepth,
+  placed: COPY.varPlaced,
+  heapSize: COPY.varHeapSize,
+  pivot: COPY.varPivot,
+  low: COPY.varLow,
+  high: COPY.varHigh,
+  j: COPY.varJ,
+  i: COPY.varI,
+  key: COPY.varKey,
 } as const;
 
 function markedIndex(state: ViewState, label: MarkLabel): number | null {

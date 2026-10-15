@@ -1,8 +1,8 @@
 import type { PassRecord } from '../core/replay';
 import { COPY } from '../copy/zh';
 
-/** 表头文案（COPY 未覆盖的表结构字段，集中在此） */
-const HEAD = { pass: '趟次', seq: '序列' } as const;
+/** 表头文案取自 COPY（界面文案唯一来源） */
+const HEAD = { pass: COPY.tableHeadPass, seq: COPY.tableHeadSeq } as const;
 
 function cell(text: string, className?: string): HTMLTableCellElement {
   const td = document.createElement('td');

@@ -1,4 +1,5 @@
 import { parseDataInput, createControls } from '../../src/ui/controls';
+import { COPY } from '../../src/copy/zh';
 import { registerBuiltinAlgorithms } from '../../src/algorithms';
 import { listAlgorithms, resetRegistry } from '../../src/core/registry';
 
@@ -57,20 +58,36 @@ describe('控制条', () => {
     expect(calls).toContain('algo:quick');
   });
 
-  it('输入非法时显示错误文案且不触发 onData', () => {
-    const { host, controls, applied } = setup();
-    controls.setError('至少需要 2 个数据');
-    expect(host.querySelector('.err')!.textContent).toContain('至少');
+  it('走真实输入路径：非法内容报错、不触发 onData', () => {
+    const { host, applied } = setup();
+    const input = host.querySelector('input[type="text"]') as HTMLInputElement;
+    input.value = '1,2,abc';
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
     expect(applied).toHaveLength(0);
+    expect(host.querySelector('.err')!.textContent).toContain('数字');
   });
 
-  it('setProgress 更新步数文案与播放按钮状态', () => {
+  it('走真实输入路径：点「应用」用合法内容触发一次 onData', () => {
+    const { host, applied } = setup();
+    const input = host.querySelector('input[type="text"]') as HTMLInputElement;
+    input.value = '5 3、9';
+    const applyBtn = [...host.querySelectorAll('button')].find((b) => b.textContent === COPY.apply)!;
+    applyBtn.click();
+    expect(applied).toEqual([[5, 3, 9]]);
+    expect(host.querySelector('.err')!.textContent).toBe('');
+  });
+
+  it('setProgress 精确更新步数文案与播放按钮三态（播放/暂停/重播）', () => {
     const { host, controls } = setup();
-    controls.setProgress(3, 10, 2, true);
+    const playBtn = (): string => [...host.querySelectorAll('button')].find((b) => b.className === 'play')!.textContent!;
+    controls.setProgress(3, 10, 2, false);
     expect(host.textContent).toContain('第 3 / 10 步');
-    const buttons = [...host.querySelectorAll('button')];
-    expect(buttons.some((b) => b.textContent === '暂停')).toBe(true);
+    expect(playBtn()).toBe(COPY.play);
+    controls.setProgress(3, 10, 2, true);
+    expect(playBtn()).toBe(COPY.pause);
     controls.setProgress(10, 10, 2, false);
-    expect(buttons.some((b) => b.textContent === '重播' || b.textContent === '播放')).toBe(true);
+    expect(playBtn()).toBe(COPY.replay);
+    controls.setProgress(0, 0, 2, false);
+    expect(playBtn()).toBe(COPY.play);
   });
 });
