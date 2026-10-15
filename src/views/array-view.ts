@@ -3,7 +3,19 @@ import type { ViewState } from '../core/replay';
 import { COPY } from '../copy/zh';
 import { formatIndex, type IndexBase } from '../core/index-base';
 
-const MAX_PER_ROW = 16;
+export const MAX_PER_ROW = 16;
+export const MIN_PER_ROW = 4;
+/** 每格占位宽 / 列间距：与 theme.css 的 --cell-w(58px) 和 .idxrow 的列间距保持一致 */
+const CELL_WIDTH = 58;
+const CELL_GAP = 12;
+/** jsdom / 隐藏容器下 clientWidth 为 0 时用兜底值，保证默认仍是 16 格一行 */
+const FALLBACK_WIDTH = 1200;
+
+/** 按容器宽度算每行放几格（格宽 + 间距固定），下限 MIN_PER_ROW、上限 MAX_PER_ROW */
+export function cellsPerRow(containerWidth: number, cellWidth = CELL_WIDTH, gap = CELL_GAP): number {
+  const fit = Math.floor((containerWidth + gap) / (cellWidth + gap));
+  return Math.min(MAX_PER_ROW, Math.max(MIN_PER_ROW, fit));
+}
 
 export function createArrayView(): ViewModule {
   let host: HTMLElement | null = null;
@@ -13,21 +25,28 @@ export function createArrayView(): ViewModule {
   let auxCells: HTMLElement[] = [];
   let auxRows: HTMLElement[] = [];
   let data: number[] = [];
+  /** 当前每行格数：由宿主宽度算出，宽度变化时重建行（总格数不变，只改换行位置） */
+  let perRow = MAX_PER_ROW;
+  /** 最近一次 render 的状态与上下文：重建行后要按它重渲染，否则宽高变化会丢状态 */
+  let lastState: ViewState | null = null;
+  let lastCtx: ViewContext | null = null;
+  let ro: ResizeObserver | null = null;
 
-  function mount(target: HTMLElement, ctx: ViewContext): void {
-    host = target;
-    data = [...ctx.data];
-    host.innerHTML = '';
-    host.classList.add('array-view');
+  function resetRefs(): void {
     cells = [];
     idxNums = [];
     ptrs = [];
     auxCells = [];
     auxRows = [];
+  }
+
+  /** 按当前 perRow 把格子铺进宿主（调用方负责先清空宿主 / 调 resetRefs） */
+  function buildRows(ctx: ViewContext): void {
+    if (!host) return;
     const base: IndexBase = ctx.indexBase ?? 0;
 
-    for (let start = 0; start < data.length; start += MAX_PER_ROW) {
-      const size = Math.min(MAX_PER_ROW, data.length - start);
+    for (let start = 0; start < data.length; start += perRow) {
+      const size = Math.min(perRow, data.length - start);
       const row = document.createElement('div');
       row.className = 'cellrow';
       const idxRow = document.createElement('div');
@@ -83,8 +102,46 @@ export function createArrayView(): ViewModule {
     }
   }
 
+  /** 宿主宽度变化：换行位置重建行，再按最近状态重渲染（格数与标记都不丢） */
+  function rebuildRows(): void {
+    if (!host || !lastCtx) return;
+    const keep = lastState;
+    const keepCtx = lastCtx;
+    host.innerHTML = '';
+    resetRefs();
+    buildRows(keepCtx);
+    if (keep) render(keep, keepCtx);
+  }
+
+  function mount(target: HTMLElement, ctx: ViewContext): void {
+    host = target;
+    data = [...ctx.data];
+    lastCtx = ctx;
+    lastState = null;
+    host.innerHTML = '';
+    host.classList.add('array-view');
+    resetRefs();
+    // clientWidth 在 jsdom / 隐藏容器里恒为 0：0 或负数一律退回兜底宽度（默认 16 格一行）
+    perRow = cellsPerRow(target.clientWidth || FALLBACK_WIDTH);
+    buildRows(ctx);
+
+    // jsdom 没有 ResizeObserver —— 必须判存在，否则测试环境直接崩
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(() => {
+        if (!host) return;
+        const next = cellsPerRow(host.clientWidth || FALLBACK_WIDTH);
+        if (next === perRow) return;
+        perRow = next;
+        rebuildRows();
+      });
+      ro.observe(target);
+    }
+  }
+
   function render(state: ViewState, ctx: ViewContext): void {
     if (!host) return;
+    lastState = state;
+    lastCtx = ctx;
     const base: IndexBase = ctx.indexBase ?? 0;
     const pointerLabels = new Map<number, string[]>();
     state.activeIndices.forEach((index, order) => {
@@ -94,6 +151,16 @@ export function createArrayView(): ViewModule {
     for (const [index, marks] of state.marks) {
       if (marks.has('pivot')) pointerLabels.set(index, [...(pointerLabels.get(index) ?? []), 'pivot']);
     }
+
+    // 当前作用域（越界淡化用，独立于 data-mark 的算法标记语义）：
+    // 堆排序进行中以堆为准（heapSize 是堆内最后一个下标），否则看递归栈最后一层；
+    // 两者都没有时 scope 为 null = 全部在范围内，谁也不淡化。
+    const scope: [number, number] | null =
+      state.heapSize !== null
+        ? [0, state.heapSize]
+        : state.callStack.length > 0
+          ? state.callStack[state.callStack.length - 1]
+          : null;
 
     for (let i = 0; i < state.data.length; i++) {
       const cell = cells[i];
@@ -107,6 +174,8 @@ export function createArrayView(): ViewModule {
       // 堆排序：heapSize 是「堆内最后一个下标」，其左侧即当前堆区（虚线边框，随堆收缩）
       if (state.heapSize !== null && i <= state.heapSize) marks.add('heap');
       cell.dataset.mark = [...marks].join(' ');
+      // 递归区间 / 堆区之外的格子淡化：与 data-mark 分开，免得污染算法标记语义
+      cell.dataset.faded = scope && (i < scope[0] || i > scope[1]) ? '1' : '0';
       const ptr = ptrs[i];
       if (ptr) {
         // 每个指针一个彩色药丸：颜色由 theme.css 按 pl-i / pl-j / pl-pivot 给
@@ -135,8 +204,14 @@ export function createArrayView(): ViewModule {
   }
 
   function destroy(): void {
+    // 先解绑观察者，免得销毁后回调又去碰已清空的宿主
+    if (ro) { ro.disconnect(); ro = null; }
     if (host) { host.innerHTML = ''; host.classList.remove('array-view'); }
-    host = null; cells = []; idxNums = []; ptrs = []; auxCells = []; auxRows = [];
+    host = null;
+    resetRefs();
+    data = [];
+    lastState = null;
+    lastCtx = null;
   }
 
   return { kind: 'array', mount, render, destroy };

@@ -424,6 +424,17 @@ input[type="range"].seek::-moz-range-thumb { opacity: 0; }
   min-height: 0;
 }
 
+/* 数组挂载点必须吃满卡片宽度：.arraywrap 是 align-items:center 的纵向 flex，
+   默认下这个 div 作为 flex item 会「按内容收缩」—— 宿主宽度恒等于当前行宽，
+   cellsPerRow 于是永远算到下限（4 格 = 232px 自锁，视口再宽也不换行）。
+   宽度只由卡片决定，行内各自居中（每行 .cellrow 再按内容收缩居中）。 */
+.arraywrap > div {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .cellrow {
   display: flex;
   flex-direction: column;
@@ -482,6 +493,9 @@ input[type="range"].seek::-moz-range-thumb { opacity: 0; }
   border-color: var(--c-pivot-line);
   box-shadow: 0 0 0 3px var(--c-pivot-bg);
 }
+
+/* 递归区间 / 堆区之外的格子：淡化（只降不透明度，不引新色值；mark 语义不受影响） */
+.cell[data-faded="1"] { opacity: 0.4; }
 
 .ptrs {
   display: flex;
@@ -855,4 +869,35 @@ button:focus-visible,
 input:focus-visible {
   outline: 2px solid var(--c-accent);
   outline-offset: 2px;
+}
+
+/* ── 窄屏降级（≤1024px）：主视图与信息栏上下堆叠 + 尺寸收紧，禁止横向滚动 ──
+   分栏的两个网格容器：.views（数组卡 / 结构卡）与 .bottom（伪代码 / 每趟结果 / 状态），
+   窄屏一律压成一列；.app 原来的 min-width:1180px 是横向滚动的唯一来源，这里放开。
+   注意 --cell-w 保持 58px 不动 —— array-view 的 cellsPerRow 按 58px 步进算格数，
+   改宽度会让「算出来的每行格数」与实际排版错位（缩的是内边距与字号，不是格宽）。 */
+@media (max-width: 1180px) {
+  /* 1180 就是骨架原本写死的 .app min-width：1025–1179 这段双栏还成立，
+     但页面宽度不该再被撑到 1180（否则这段视口必然出现横向滚动条）。 */
+  .app { min-width: 0; }
+}
+
+@media (max-width: 1024px) {
+  .app {
+    min-width: 0;
+    padding: 12px 12px;
+  }
+
+  .views,
+  .bottom {
+    grid-template-columns: 1fr;
+  }
+
+  .pane { padding: 10px 12px 12px; }
+  .pane.tight { padding: 8px 10px 10px; }
+
+  .cellrow { gap: 6px; }
+  .cell { margin: 2px; font-size: 15px; }
+  .idxnum { font-size: 10px; }
+  .legend { font-size: 11px; }
 }
