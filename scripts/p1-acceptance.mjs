@@ -77,6 +77,11 @@ for (const name of ['插入', '折半插入', '希尔', '冒泡', '快排', '选
       return i === 0 || n.dataset.parent === String(Math.floor((i - 1) / 2));
     }),
     脚注: document.querySelector('.tree-footer')?.textContent ?? '',
+    图例项数: document.querySelectorAll('.legend > span').length,
+    图例同一行: (() => {
+      const tops = [...document.querySelectorAll('.legend > span')].map((s) => Math.round(s.getBoundingClientRect().top));
+      return tops.length > 0 && new Set(tops).size === 1;
+    })(),
     提示: document.querySelector('.hint')?.textContent ?? '',
     区条: document.querySelectorAll('.zone').length,
     状态标签: document.querySelectorAll('.tag')[4]?.textContent,
@@ -105,6 +110,8 @@ for (const name of ['插入', '折半插入', '希尔', '冒泡', '快排', '选
     check(info.区条 === 8, `${name} 结构视图=分组着色 8 格`, `区条 ${info.区条}`);
     check(info.脚注.includes('增量 d'), `${name} 分组视图有增量脚注`, info.脚注);
   }
+  check(info.图例项数 === 4, `${name} 图例 4 项`, `${info.图例项数}`);
+  check(info.图例同一行 === true, `${name} 图例横排未被误伤`, String(info.图例同一行));
   if (kind === 'hint') {
     check(info.提示.includes('没有结构视图'), `${name} 空态给准确提示（不是「尚未开始」）`, info.提示);
   }
