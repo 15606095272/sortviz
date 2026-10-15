@@ -18,6 +18,7 @@ export const COPY = {
   panelState: '状态',
   panelComplexity: '复杂度',
   initial: '初始',
+  auxArray: '辅助数组',
   emptyPasses: '还没有走完任何一趟',
   arrayView: '数组视图',
   structureView: '结构视图',

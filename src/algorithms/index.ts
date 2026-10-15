@@ -6,6 +6,7 @@ import { bubble } from './bubble';
 import { quick } from './quick';
 import { selection } from './selection';
 import { heap } from './heap';
+import { merge } from './merge';
 
 export function registerBuiltinAlgorithms(): void {
   registerAlgorithm(insertion);
@@ -15,4 +16,5 @@ export function registerBuiltinAlgorithms(): void {
   registerAlgorithm(quick);
   registerAlgorithm(selection);
   registerAlgorithm(heap);
+  registerAlgorithm(merge);
 }
