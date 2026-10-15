@@ -1,5 +1,6 @@
 import type { ViewContext, ViewModule } from '../core/registry';
 import type { ViewState } from '../core/replay';
+import { COPY } from '../copy/zh';
 
 export function createStructureView(): ViewModule {
   let host: HTMLElement | null = null;
@@ -17,6 +18,16 @@ export function createStructureView(): ViewModule {
     if (state.heapSize !== null) { renderHeap(host, state); return; }
     if (state.callStack.length > 0) { renderRecursionTree(host, state); return; }
     if (state.sorted.size > 0) { renderZones(host, state); return; }
+    // 第 0 步三种结构都还没出现（快排要等进入划分、插入/冒泡要等有序区标记），
+    // 否则右侧就是一张空白卡；给一句占位说明，第一眼不至于像坏了。
+    renderHint(host);
+  }
+
+  function renderHint(root: HTMLElement): void {
+    const hint = document.createElement('p');
+    hint.className = 'hint';
+    hint.textContent = COPY.hintStructure;
+    root.append(hint);
   }
 
   function renderRecursionTree(root: HTMLElement, state: ViewState): void {

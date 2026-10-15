@@ -1,6 +1,7 @@
 import { createStructureView } from '../../src/views/structure-view';
 import { createViewState, replay } from '../../src/core/replay';
 import { markStep, unmarkStep } from '../../src/core/step';
+import { COPY } from '../../src/copy/zh';
 import type { ViewContext } from '../../src/core/registry';
 
 const ctx = (data: number[]): ViewContext => ({ data, algorithmId: 'quick' });
@@ -18,6 +19,17 @@ describe('结构视图', () => {
     const empty = createViewState(data);
     view.render(empty, ctx(data));
     expect(host.querySelectorAll('.tree-level')).toHaveLength(0);
+  });
+
+  it('三种结构都不成立时渲染占位提示，进入划分后消失', () => {
+    const data = [49, 38, 65, 97];
+    const host = document.createElement('div');
+    const view = createStructureView();
+    view.mount(host, ctx(data));
+    view.render(createViewState(data), ctx(data));
+    expect(host.querySelector('.hint')!.textContent).toBe(COPY.hintStructure);
+    view.render(replay(data, [markStep('range', [0, 3], 6, '划分', [0, 3])], 1), ctx(data));
+    expect(host.querySelector('.hint')).toBeNull();
   });
 
   it('嵌套区间渲染成多层，弹栈后层数减少', () => {

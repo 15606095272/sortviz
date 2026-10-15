@@ -23,6 +23,18 @@
   --c-accent: #7d8f69;
 
   --gap: 12px;
+
+  /* 装配层补充的 token（同样只在本文件里出现色值） */
+  --text-on-accent: #ffffff;                  /* 实底按钮 / 高亮胶囊上的字色 */
+  --radius-sm: 10px;                          /* 控件、格子、小胶囊圆角 */
+  --radius-pill: 999px;                       /* 胶囊 */
+  --cell-w: 56px;                             /* 数组格子（含指针槽）的列宽 */
+  --shadow-card: 0 1px 2px rgba(90, 70, 40, 0.04), 0 10px 26px -20px rgba(90, 70, 40, 0.35);
+  --shadow-ring: 0 0 0 3px rgba(194, 145, 95, 0.18);   /* 当前参与比较的格子外圈 */
+
+  --sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
 /* 状态标记（data-mark 允许空格分隔的多个标记） */
@@ -55,3 +67,584 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
+
+/* =========================================================================
+   装配层样式（Task 11b）：卡片骨架 / 控制条 / 双视图 / 底部三卡 / 状态区
+   只消费上面的语义 token，不出现任何字面色值。
+   ========================================================================= */
+
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  height: 100%;
+}
+
+/* —— 整体骨架：纵向卡片流 —— */
+.app {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  min-height: 100vh;
+  min-width: 1080px;
+  padding: 16px 20px 0;
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 4px;
+}
+h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: 0.3px;
+}
+h1 em {
+  font-style: normal;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--muted);
+  margin-left: 8px;
+}
+
+/* —— 卡片 —— */
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+}
+
+/* —— 控制卡 —— */
+.ctrl {
+  padding: 12px 16px;
+}
+.ctrl-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.ctrlgroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sep {
+  width: 1px;
+  height: 22px;
+  background: var(--line);
+  flex: 0 0 1px;
+}
+.lab {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.err {
+  flex-basis: 100%;
+  font-size: 12px;
+  color: var(--c-swapping);
+}
+.err:empty {
+  display: none;
+}
+
+/* 算法 chips：默认描边，选中 = 橄榄实底白字 */
+.chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.chip {
+  padding: 6px 11px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--line);
+  background: var(--c-default-bg);
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.12s linear, color 0.12s linear, border-color 0.12s linear;
+}
+.chip:hover {
+  border-color: var(--muted);
+}
+.chip.on {
+  background: var(--c-accent);
+  border-color: var(--c-accent);
+  color: var(--text-on-accent);
+  font-weight: 600;
+}
+
+/* 输入框与滑块 */
+input[type="text"].datainput {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: 0.2px;
+  padding: 7px 12px;
+  width: 290px;
+  background: var(--c-default-bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+}
+input[type="text"].datainput:focus {
+  outline: none;
+  border-color: var(--c-accent);
+}
+input[type="range"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 110px;
+  height: 5px;
+  margin: 0;
+  border-radius: 3px;
+  background: var(--line2);
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--card);
+  border: 2px solid var(--c-comparing);
+  cursor: pointer;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--card);
+  border: 2px solid var(--c-comparing);
+  cursor: pointer;
+}
+input[type="range"].seek {
+  width: 100%;
+}
+.countval,
+.speedval {
+  min-width: 34px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* 按钮：默认描边，主按钮橄榄，播放键奶茶 */
+button {
+  font: inherit;
+  font-size: 13px;
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--c-default-bg);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.12s linear, border-color 0.12s linear;
+}
+button:hover {
+  background: var(--line2);
+}
+button.pri {
+  background: var(--c-accent);
+  border-color: var(--c-accent);
+  color: var(--text-on-accent);
+}
+button.pri:hover {
+  background: var(--c-sorted);
+  border-color: var(--c-sorted);
+}
+button.play {
+  background: var(--c-comparing);
+  border-color: var(--c-comparing);
+  color: var(--text-on-accent);
+  font-weight: 600;
+  padding: 7px 20px;
+}
+button.play:hover {
+  background: var(--c-swapping);
+  border-color: var(--c-swapping);
+}
+button.ic {
+  padding: 7px 10px;
+  font-family: var(--mono);
+}
+
+/* 进度区 */
+.progress {
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.bar {
+  height: 5px;
+  border-radius: 3px;
+  background: var(--line2);
+  overflow: hidden;
+}
+.bar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--c-swapping);
+  border-radius: 3px;
+  transition: width 0.12s linear;
+}
+.ptext {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--muted);
+}
+.steptext {
+  font-family: var(--mono);
+}
+
+/* —— 主区：上半双视图 + 下半三卡 —— */
+main {
+  flex: 1;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: var(--gap);
+  min-height: 0;
+}
+.views {
+  display: grid;
+  grid-template-columns: 1fr 1fr;   /* 两列等宽 */
+  gap: var(--gap);
+  min-height: 0;
+}
+.bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;   /* 底部三卡三等分 */
+  gap: var(--gap);
+  align-items: start;
+  padding-bottom: 16px;
+}
+
+/* —— 卡片内容区与标题 —— */
+.pane {
+  padding: 12px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.pane.tight {
+  padding: 10px 14px 12px;
+}
+.pane h2 {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pane h2 .tag {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.arraywrap,
+.structwrap {
+  flex: 1;
+  min-height: 132px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  overflow: auto;
+}
+
+/* —— 数组视图：下标行 + 格子 + 指针行 —— */
+.cellrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.idxrow {
+  display: flex;
+}
+.cellbox {
+  flex: 0 0 var(--cell-w);
+  width: var(--cell-w);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.idxnum {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+.cell {
+  margin: 3px;
+  height: 58px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--c-default-line);
+  border-radius: var(--radius-sm);
+  background: var(--c-default-bg);
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  transition: background 0.12s linear, border-color 0.12s linear, box-shadow 0.12s linear;
+}
+/* 参与比较的格子加一圈极浅的环（底色/描边已由 data-mark 规则给定） */
+.cell[data-mark~="comparing"] {
+  box-shadow: var(--shadow-ring);
+}
+.ptrs {
+  display: flex;
+  height: 28px;
+}
+.ptr {
+  flex: 0 0 var(--cell-w);
+  width: var(--cell-w);
+  margin: 0 3px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 18px;
+  border-radius: var(--radius-pill);
+  color: var(--muted);
+}
+/* 有内容的指针槽 = 与格子等宽的胶囊（array-view 里指针文案是纯文本，故胶囊宽度按列宽对齐） */
+.ptr:not(:empty) {
+  background: var(--c-swapping);
+  color: var(--text-on-accent);
+}
+
+/* —— 结构视图：递归层 / 堆节点 / 有序区条 —— */
+.structure-view .hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.structure-view {
+  display: flex;
+  flex-direction: row;            /* 覆盖 .arraywrap/.structwrap 的 column：有序区提示要横排 */
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  align-content: center;
+  gap: 12px;
+}
+.tree-level {
+  flex: 1 0 100%;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+.tree-node {
+  padding: 8px 12px;
+  min-width: 74px;
+  max-width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--c-default-bg);
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.tree-node small {
+  display: block;
+  font-family: var(--sans);
+  font-size: 10px;
+  color: var(--muted);
+}
+/* 当前划分层：橄榄底 + 左侧强调边 */
+.tree-level[data-current="true"] .tree-node {
+  background: var(--c-sorted-bg);
+  border-color: var(--c-accent);
+  box-shadow: inset 3px 0 0 var(--c-accent);
+}
+.tree-level[data-current="true"] .tree-node small {
+  color: var(--c-sorted);
+}
+/* 堆：按层依次排布的节点胶囊，节点下方以极小的下标标注数组位置 */
+.heap-node {
+  position: relative;
+  min-width: 44px;
+  padding: 8px 10px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--c-default-bg);
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+}
+.heap-node::after {
+  content: attr(data-index);
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 2px;
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.heap-node[data-index="0"] {
+  background: var(--c-sorted-bg);
+  border-color: var(--c-accent);
+}
+/* 有序区 / 待处理区 */
+.zone {
+  min-width: 46px;
+  padding: 10px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+}
+.zone[data-zone="sorted"] {
+  background: var(--c-sorted-bg);
+  border-color: var(--c-sorted);
+  color: var(--c-sorted);
+}
+.zone[data-zone="unsorted"] {
+  background: var(--c-default-bg);
+  border-color: var(--c-default-line);
+  color: var(--muted);
+}
+
+/* —— 伪代码 —— */
+.code {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.75;
+}
+.code .ln {
+  display: block;
+  position: relative;
+  padding: 0 8px 0 34px;
+  border-radius: 4px;
+  color: var(--text);
+  white-space: pre;
+}
+.code .ln b {
+  position: absolute;
+  left: 0;
+  width: 24px;
+  text-align: right;
+  color: var(--muted);
+  font-weight: 400;
+}
+.code .ln.hl {
+  background: var(--c-comparing-bg);
+  box-shadow: inset 3px 0 0 var(--c-comparing);
+}
+
+/* —— 每趟结果表 —— */
+.passtable {
+  overflow: auto;
+  max-height: 32vh;
+}
+.passtable table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.passtable th,
+.passtable td {
+  padding: 6px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--line2);
+  white-space: nowrap;
+}
+.passtable th {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.mono {
+  font-family: var(--mono);
+  color: var(--text);
+  letter-spacing: 0.4px;
+}
+.passtable tr.now td {
+  background: var(--c-comparing-bg);
+}
+.passtable tr.empty td {
+  color: var(--muted);
+}
+
+/* —— 状态卡：变量 / 计数器 / 当前动作 / 复杂度 —— */
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 8px;
+}
+.stats.counters {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--line2);
+}
+.stat {
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--c-default-bg);
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.stat b {
+  margin-left: 4px;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--text);
+}
+.status {
+  padding-top: 10px;
+  font-size: 12.5px;
+  color: var(--text);
+  min-height: 18px;
+}
+.cx {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line2);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px 12px;
+}
+.cxrow {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.cxrow b {
+  font-family: var(--mono);
+  font-weight: 600;
+  color: var(--text);
+}
+

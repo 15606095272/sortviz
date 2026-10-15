@@ -30,6 +30,7 @@ export const COPY = {
   varJ: 'j',
   varI: 'i（空位）',
   varKey: 'key',
+  hintStructure: '尚未开始 · 播放或单步后这里显示结构变化',
   tableHeadPass: '趟次',
   tableHeadSeq: '序列',
   complexityAvg: '平均',
