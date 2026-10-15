@@ -14,11 +14,17 @@ import { renderPassTable } from './ui/pass-table';
 import { COPY } from './copy/zh';
 import type { Step } from './core/step';
 import { formatIndex, type IndexBase } from './core/index-base';
+import { applyTheme, loadTheme, saveTheme, type Theme } from './ui/theme';
 
 const MAX_STEPS = 20000;
 const DEFAULT_DATA = [49, 38, 65, 97, 76, 13, 27, 49];
 
 export function mountApp(root: HTMLElement): void {
+  // 主题必须先落地再渲染第一帧：否则深色偏好用户会先看到一帧浅色（白闪）。
+  // loadTheme 自带兜底，localStorage 不可用时静默回退浅色。
+  let theme: Theme = loadTheme(window.localStorage);
+  applyTheme(theme);
+
   registerBuiltinAlgorithms();
   registerView(createArrayView());
   registerView(createBarView());
@@ -121,6 +127,13 @@ export function mountApp(root: HTMLElement): void {
       mountMainView(ctx);
       renderAt(player.state.index);
     },
+    // 切主题：只落 data-theme + 存偏好，不重建视图、不重跑算法（颜色只在 CSS token 里）
+    onTheme: (next) => {
+      theme = next;
+      applyTheme(theme);
+      saveTheme(theme, window.localStorage);
+      controls?.setTheme(theme);
+    },
   });
 
   function rebuild(nextAlgorithmId = algorithmId, nextData = data): void {
@@ -139,6 +152,7 @@ export function mountApp(root: HTMLElement): void {
   rebuild();
   controls?.setIndexBase(indexBase);
   controls?.setView(viewKind);
+  controls?.setTheme(theme);
 
   // 全局键盘快捷键：空格播放/暂停、←/→ 单步、Shift+←/→ 跳趟、1..9 切算法。
   // handleKey 在输入框内一律返回 false，所以这里放心 preventDefault（也不会吞掉打字）。

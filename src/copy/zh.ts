@@ -53,6 +53,9 @@ export const COPY = {
   viewLabel: '主视图',
   viewArrayLabel: '数组',
   viewBarLabel: '柱状图',
+  themeLabel: '主题',
+  themeLight: '浅色',
+  themeDark: '深色',
   structureTagDefault: '结构变化',
   structureTag: {
     insertion: '插入 → 有序区扩张',

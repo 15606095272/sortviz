@@ -1,6 +1,7 @@
 import { COPY } from '../copy/zh';
 import { getAlgorithm, type ViewKind } from '../core/registry';
 import type { IndexBase } from '../core/index-base';
+import type { Theme } from '../ui/theme';
 
 export type ParseResult = { ok: true; data: number[] } | { ok: false; message: string };
 
@@ -34,6 +35,7 @@ export interface ControlsHandlers {
   onSpeed(multiplier: number): void;
   onIndexBase(base: IndexBase): void;
   onView(kind: ViewKind): void;               // 主视图切换：数组视图 ↔ 柱状图（结构视图始终保留）
+  onTheme(theme: Theme): void;                // 深浅主题：只切 token，不重建视图
 }
 
 export interface Controls {
@@ -43,6 +45,7 @@ export interface Controls {
   setIndexBase(base: IndexBase): void; // 装配层回灌当前下标进制，同步胶囊高亮（与 setPass 同风格）
   setView(kind: ViewKind): void;       // 装配层回灌当前主视图，同步胶囊高亮（与 setIndexBase 同风格）
   setAlgorithm(id: string): void;      // 装配层回灌当前算法，同步 chip 高亮（键盘数字键切算法时用）
+  setTheme(theme: Theme): void;        // 装配层回灌当前主题，同步胶囊高亮（与 setView 同风格）
 }
 
 /** 实物稿里的默认演示数据（数据结构的经典样例序列） */
@@ -251,6 +254,33 @@ export function createControls(host: HTMLElement, handlers: ControlsHandlers): C
   );
   setView('array');
 
+  // —— 主题（浅色 / 深色）——
+  // 只切 html 上的 data-theme，theme.css 里由 :root[data-theme='dark'] 逐 token 覆盖；
+  // 这里不碰任何颜色，容器类名 themeswitch 与 .chips/.indexbase/.viewswitch 分开
+  const themeGroup = mk('div', 'ctrlgroup themeswitch');
+  const themeCaps: { theme: Theme; cap: HTMLElement }[] = [];
+  const setTheme = (theme: Theme): void => {
+    for (const item of themeCaps) item.cap.classList.toggle('on', item.theme === theme);
+  };
+  const themeCap = (theme: Theme, text: string): HTMLElement => {
+    const cap = mk('span', 'chip', text);
+    cap.dataset.theme = theme;
+    const pick = (): void => {
+      setTheme(theme);                 // 本地先亮（与 viewswitch 同风格），装配层随后回灌
+      handlers.onTheme(theme);
+    };
+    cap.addEventListener('click', pick);
+    activatable(cap, pick);
+    themeCaps.push({ theme, cap });
+    return cap;
+  };
+  themeGroup.append(
+    mk('span', 'lab', COPY.themeLabel),
+    themeCap('light', COPY.themeLight),
+    themeCap('dark', COPY.themeDark),
+  );
+  setTheme('light');
+
   // —— 播放区 ——
   const transport = mk('div', 'ctrlgroup transport');
   const toStartBtn = buttonEl('ic', '⏮');
@@ -305,7 +335,7 @@ export function createControls(host: HTMLElement, handlers: ControlsHandlers): C
   seekInput.addEventListener('input', () => handlers.onSeek(Number(seekInput.value)));
   progress.append(bar, ptext, seekInput);
 
-  host.append(chipRow, mk('span', 'sep'), dataGroup, mk('span', 'sep'), viewGroup, mk('span', 'sep'), indexBaseGroup, mk('span', 'sep'), transport, progress, errRow);
+  host.append(chipRow, mk('span', 'sep'), dataGroup, mk('span', 'sep'), viewGroup, mk('span', 'sep'), indexBaseGroup, mk('span', 'sep'), themeGroup, mk('span', 'sep'), transport, progress, errRow);
 
   const setProgress = (nextIndex: number, nextTotal: number, speed: number, isPlaying: boolean): void => {
     index = nextIndex;
@@ -326,5 +356,5 @@ export function createControls(host: HTMLElement, handlers: ControlsHandlers): C
 
   const setPass = (text: string): void => { passText.textContent = text; };
 
-  return { setError, setProgress, setPass, setIndexBase, setView, setAlgorithm };
+  return { setError, setProgress, setPass, setIndexBase, setView, setAlgorithm, setTheme };
 }

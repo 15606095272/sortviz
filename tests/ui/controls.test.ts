@@ -48,6 +48,7 @@ describe('控制条', () => {
       onSpeed: (m) => calls.push(`speed:${m}`),
       onIndexBase: (base) => calls.push(`indexbase:${base}`),
       onView: (kind) => calls.push(`view:${kind}`),
+      onTheme: (theme) => calls.push(`theme:${theme}`),
     });
     return { host, controls, calls, applied };
   };
