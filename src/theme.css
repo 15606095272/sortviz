@@ -500,6 +500,11 @@ input[type="range"].seek::-moz-range-thumb { opacity: 0; }
   box-shadow: 0 0 0 3px var(--c-pivot-bg);
 }
 
+/* 折半查找：当前查找区间（只上色，不做成递归树） */
+.cell[data-mark~="range"] {
+  box-shadow: inset 0 -3px 0 var(--c-accent);
+}
+
 /* 递归区间 / 堆区之外的格子：淡化（只降不透明度，不引新色值；mark 语义不受影响） */
 .cell[data-faded="1"] { opacity: 0.4; }
 

@@ -56,7 +56,7 @@ describe('控制条', () => {
   it('算法 chips 按注册顺序渲染，点击回调带 id', () => {
     const { host, calls } = setup();
     const chips = [...host.querySelectorAll('.chips .chip')];
-    expect(chips.map((c) => c.textContent)).toEqual(['插入', '折半插入', '希尔', '冒泡', '快排', '选择', '堆排', '归并', '基数']);
+    expect(chips.map((c) => c.textContent)).toEqual(['插入', '折半插入', '希尔', '冒泡', '快排', '选择', '堆排', '归并', '基数', '折半查找']);
     // 注册顺序变成 插入/折半插入/希尔/冒泡/快排/选择/堆排，快排（quick）仍是第 5 个 chip
     (chips[4] as HTMLElement).click();
     expect(calls).toContain('algo:quick');

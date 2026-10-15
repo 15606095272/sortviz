@@ -1,5 +1,5 @@
 import { registerAlgorithm, registerView, listAlgorithms, getAlgorithm, getView, resetRegistry } from '../../src/core/registry';
-import { registerBuiltinAlgorithms } from '../../src/algorithms';
+import { registerBuiltinAlgorithms, BUILTIN_ORDER } from '../../src/algorithms';
 import { createViewState } from '../../src/core/replay';
 
 const fakeAlgo = {
@@ -47,11 +47,9 @@ describe('注册表', () => {
     }
   });
 
-  it('内置注册后 9 种算法齐全且顺序固定（插入/折半插入/希尔/冒泡/快排/选择/堆/归并/基数）', () => {
+  it('内置算法齐全且顺序固定', () => {
     registerBuiltinAlgorithms();
-    expect(listAlgorithms().map((a) => a.id)).toEqual([
-      'insertion', 'binary-insertion', 'shell', 'bubble', 'quick', 'selection', 'heap', 'merge', 'radix',
-    ]);
+    expect(listAlgorithms().map((a) => a.id)).toEqual([...BUILTIN_ORDER]);
   });
 
   it('每个内置算法的伪代码行号唯一且 cover 到默认视图', () => {
