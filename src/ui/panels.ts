@@ -1,76 +1,32 @@
 import type { CodeLine, Complexity } from '../core/registry';
 import type { ViewState } from '../core/replay';
-import type { MarkLabel, Stats } from '../core/step';
+import type { Stats } from '../core/step';
 import { COPY } from '../copy/zh';
 
 export interface VarEntry { label: string; value: string }
 
-/** 取不到的量一律显示占位符，绝不从解说文本里猜数字 */
-const DASH = '—';
-
-/** 变量名一律取自 COPY（界面文案唯一来源，组件里不得硬编码中文） */
-const VAR = {
-  depth: COPY.varDepth,
-  placed: COPY.varPlaced,
-  heapSize: COPY.varHeapSize,
-  pivot: COPY.varPivot,
-  low: COPY.varLow,
-  high: COPY.varHigh,
-  j: COPY.varJ,
-  i: COPY.varI,
-  key: COPY.varKey,
-} as const;
-
-function markedIndex(state: ViewState, label: MarkLabel): number | null {
-  for (const [index, marks] of state.marks) {
-    if (marks.has(label)) return index;
-  }
-  return null;
-}
-
-function valueAt(state: ViewState, index: number | null): string {
-  if (index === null) return DASH;
-  const value = state.data[index];
-  return value === undefined ? DASH : String(value);
-}
-
-function activeAt(state: ViewState, order: number): string {
-  const value = state.activeIndices[order];
-  return value === undefined ? DASH : String(value);
-}
+/** 固定渲染键序：保证面板条目顺序稳定，不随步骤跳来跳去 */
+const VAR_ORDER = ['i', 'j', 'mid', 'low', 'high', 'pivot', 'key', 'minIndex', 'gap', 'k', 'width', 'lo', 'hi', 'place', 'root', 'child', 'heapSize', 'depth', 'placed'];
 
 /**
- * 纯函数：把步骤流能证明的量推导成「变量 → 值」列表。
- * 只读 ViewState，取不到的显示 '—'，不解析 lastNote。
+ * 纯函数：把 ViewState 里的变量值（算法步骤用 withVars 带出的真值）渲染成「变量 → 值」列表。
+ * 真值优先：算法没带出的量不再从解说文本里猜数字，只对公共量做兜底推导
+ * （递归深度 ← 调用栈深度，堆大小 ← 堆区右界 + 1，已就位 ← 有序集大小）。
  */
-export function deriveVars(state: ViewState, algorithmId: string): VarEntry[] {
-  const out: VarEntry[] = [];
-  if (state.callStack.length > 0) out.push({ label: VAR.depth, value: String(state.callStack.length) });
-  out.push({ label: VAR.placed, value: String(state.sorted.size) });
-
-  const top = state.callStack.length > 0 ? state.callStack[state.callStack.length - 1] : null;
-
-  switch (algorithmId) {
-    case 'quick':
-      out.push({ label: VAR.pivot, value: valueAt(state, markedIndex(state, 'pivot')) });
-      out.push({ label: VAR.low, value: top ? String(top[0]) : DASH });
-      out.push({ label: VAR.high, value: top ? String(top[1]) : DASH });
-      out.push({ label: VAR.j, value: activeAt(state, 0) });
-      break;
-    case 'insertion':
-      out.push({ label: VAR.key, value: valueAt(state, markedIndex(state, 'active')) });
-      out.push({ label: VAR.j, value: activeAt(state, 0) });
-      out.push({ label: VAR.i, value: activeAt(state, 1) });
-      break;
-    case 'bubble':
-      out.push({ label: VAR.j, value: activeAt(state, 0) });
-      break;
-    default:
-      break;
+export function deriveVars(state: ViewState, _algorithmId: string): VarEntry[] {
+  const labels = COPY.varLabels as Record<string, string>;
+  const label = (key: string): string => labels[key] ?? key;
+  const entries: VarEntry[] = [];
+  for (const key of VAR_ORDER) {
+    const value = state.vars[key];
+    if (key === 'placed' || key === 'depth' || key === 'heapSize') continue;   // 公共量单独处理
+    if (value !== undefined) entries.push({ label: label(key), value: String(value) });
   }
-
-  if (state.heapSize !== null) out.push({ label: VAR.heapSize, value: String(state.heapSize) });
-  return out;
+  // 公共量：算法没带就自己推（递归深度从 callStack，已就位从 sorted，堆大小从 heapSize+1）
+  if (state.callStack.length > 0) entries.push({ label: label('depth'), value: String(state.callStack.length) });
+  if (state.heapSize !== null) entries.push({ label: label('heapSize'), value: String(state.heapSize + 1) });
+  entries.push({ label: label('placed'), value: String(state.sorted.size) });
+  return entries;
 }
 
 /** 伪代码：每行一个 .ln，行号在 <b> 里，缩进 = 2 空格 × indent，命中行加 .hl（恰好一行） */

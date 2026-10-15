@@ -1,4 +1,4 @@
-import { compareStep, markStep, noteStep, passEndStep, swapStep, unmarkStep, type Step } from '../core/step';
+import { compareStep, markStep, noteStep, passEndStep, swapStep, unmarkStep, withVars, type Step } from '../core/step';
 
 const PSEUDO = [
   { line: 1, indent: 0, text: 'BuildMaxHeap(A):' },
@@ -42,13 +42,13 @@ export const heap = {
       while (2 * parent + 1 <= end) {
         let child = 2 * parent + 1;
         if (child + 1 <= end) {
-          steps.push(compareStep(child, child + 1, 10, `比较左右孩子 a[${child}]=${a[child]} 与 a[${child + 1}]=${a[child + 1]}`));
+          steps.push(withVars(compareStep(child, child + 1, 10, `比较左右孩子 a[${child}]=${a[child]} 与 a[${child + 1}]=${a[child + 1]}`), { root: parent, child }));
           if (a[child + 1] > a[child]) child += 1;
         }
-        steps.push(compareStep(parent, child, 11, `比较 a[${parent}]=${a[parent]} 与较大孩子 a[${child}]=${a[child]}`));
+        steps.push(withVars(compareStep(parent, child, 11, `比较 a[${parent}]=${a[parent]} 与较大孩子 a[${child}]=${a[child]}`), { root: parent, child }));
         if (a[parent] >= a[child]) break;
         [a[parent], a[child]] = [a[child], a[parent]];
-        steps.push(swapStep(parent, child, 12, `a[${child}] 更大 → 交换，父继续下沉到下标 ${child}`));
+        steps.push(withVars(swapStep(parent, child, 12, `a[${child}] 更大 → 交换，父继续下沉到下标 ${child}`), { root: parent, child }));
         parent = child;
       }
     };
@@ -62,7 +62,7 @@ export const heap = {
 
     for (let heapSize = n - 1; heapSize >= 1; heapSize--) {
       [a[0], a[heapSize]] = [a[heapSize], a[0]];
-      steps.push(swapStep(0, heapSize, 5, `堆顶（当前最大值）换到末尾 a[${heapSize}]`));
+      steps.push(withVars(swapStep(0, heapSize, 5, `堆顶（当前最大值）换到末尾 a[${heapSize}]`), { heapSize }));
       steps.push(markStep('sorted', [heapSize], 5, `a[${heapSize}]=${a[heapSize]} 就位`));
       steps.push(markStep('heap', span(0, heapSize - 1), 6, `堆大小变为 ${heapSize}`, [0, heapSize - 1]));
       // 顺序要紧：先修复堆再发 passEnd，否则每趟快照是「堆还没修复」的状态

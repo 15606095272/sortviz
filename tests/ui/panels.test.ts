@@ -7,19 +7,17 @@ import {
   renderComplexity,
 } from '../../src/ui/panels';
 import { COPY } from '../../src/copy/zh';
-import { applyStep, createViewState } from '../../src/core/replay';
-import { markStep, compareStep } from '../../src/core/step';
-import { getAlgorithm, resetRegistry } from '../../src/core/registry';
+import { replay } from '../../src/core/replay';
+import { listAlgorithms, getAlgorithm, resetRegistry } from '../../src/core/registry';
 import { registerBuiltinAlgorithms } from '../../src/algorithms';
+import { quick } from '../../src/algorithms/quick';
+import { INPUT } from '../fixtures/golden';
 
 const quickPseudo = () => {
   resetRegistry();
   registerBuiltinAlgorithms();
   return getAlgorithm('quick').pseudocode;
 };
-
-const valueOf = (vars: { label: string; value: string }[], label: string): string | undefined =>
-  vars.find((v) => v.label === label)?.value;
 
 describe('伪代码面板', () => {
   it('行数等于伪代码长度，恰好一行高亮，行号取自 CodeLine.line', () => {
@@ -34,38 +32,28 @@ describe('伪代码面板', () => {
   });
 });
 
-describe('deriveVars 变量推导（纯函数）', () => {
-  it('quick：pivot 取 pivot 标记下标的值，low/high 取调用栈顶区间，j 取 activeIndices[0]', () => {
-    const data = [49, 38, 65, 97, 76, 13];
-    let state = createViewState(data);
-    state = applyStep(state, markStep('range', [0, 5], 6, '划分区间', [0, 5]));
-    state = applyStep(state, markStep('pivot', [2], 7, 'pivot'));
-    state = applyStep(state, compareStep(4, 2, 9, '比较'));
+describe('deriveVars 变量面板（真值优先）', () => {
+  it('快排中途：变量面板给出 i/j/pivot/low/high 的真实值', () => {
+    const steps = quick.run(INPUT);
+    const state = replay(INPUT, steps, Math.floor(steps.length * 0.3));
     const vars = deriveVars(state, 'quick');
-    expect(valueOf(vars, 'pivot')).toBe(String(data[2]));
-    expect(valueOf(vars, 'low')).toBe('0');
-    expect(valueOf(vars, 'high')).toBe('5');
-    expect(valueOf(vars, 'j')).toBe('4');
-    // 公共项：递归深度 = 调用栈长度（range 进栈一次）
-    expect(valueOf(vars, '递归深度')).toBe('1');
+    const map = new Map(vars.map((v) => [v.label, v.value]));
+    expect(map.get('pivot')).toBeDefined();
+    expect(map.get('low')).toBeDefined();
+    expect(map.get('high')).toBeDefined();
+    for (const v of vars) expect(v.value).not.toBe('—');   // 真值优先后不应再出现占位符
   });
 
-  it('insertion：key 取 active 标记下标的值，j / i 依次映射 activeIndices', () => {
-    const data = [49, 38, 65, 97, 76, 13];
-    let state = createViewState(data);
-    state = applyStep(state, markStep('active', [5], 5, 'key 暂存'));
-    state = applyStep(state, compareStep(3, 5, 6, '比较'));
-    const vars = deriveVars(state, 'insertion');
-    expect(valueOf(vars, 'key')).toBe(String(data[5]));
-    expect(valueOf(vars, 'j')).toBe('3');
-    expect(valueOf(vars, 'i（空位）')).toBe('5');
-  });
-
-  it('取不到的量显示占位符，不猜数字', () => {
-    const vars = deriveVars(createViewState([3, 1]), 'bubble');
-    expect(valueOf(vars, 'j')).toBe('—');
-    expect(valueOf(vars, '递归深度')).toBeUndefined();
-    expect(valueOf(vars, '已就位')).toBe('0');
+  it('9 个算法的变量面板都不为空、且值都是数字（表驱动）', () => {
+    resetRegistry();
+    registerBuiltinAlgorithms();
+    for (const algo of listAlgorithms()) {
+      const steps = algo.run(INPUT);
+      const state = replay(INPUT, steps, Math.floor(steps.length / 2));
+      const vars = deriveVars(state, algo.id);
+      expect(vars.length, algo.id).toBeGreaterThan(0);
+      for (const v of vars) expect(Number.isFinite(Number(v.value)), `${algo.id}.${v.label}=${v.value}`).toBe(true);
+    }
   });
 });
 
@@ -104,13 +92,17 @@ describe('复杂度面板', () => {
 });
 
 describe('变量区渲染', () => {
-  it('renderVars 把 deriveVars 的结果写进宿主', () => {
-    const data = [49, 38, 65];
-    let state = createViewState(data);
-    state = applyStep(state, markStep('pivot', [0], 7, 'pivot'));
+  it('renderVars 把 deriveVars 的真值结果写进宿主（每个变量一张小卡片）', () => {
+    const steps = quick.run(INPUT);
+    const state = replay(INPUT, steps, Math.floor(steps.length * 0.3));
     const host = document.createElement('div');
     renderVars(host, state, 'quick');
-    expect(host.textContent).toContain('pivot');
-    expect(host.textContent).toContain(String(data[0]));
+    const expected = deriveVars(state, 'quick');
+    expect(host.querySelectorAll('.stat')).toHaveLength(expected.length);
+    expect(expected.length).toBeGreaterThan(0);
+    // 标签走 COPY，值来自算法带出的真值（不再是 '—'）
+    expect(host.textContent).toContain(COPY.varLabels.pivot);
+    expect(host.textContent).toContain(COPY.varPlaced);
+    for (const entry of expected) expect(host.textContent).toContain(entry.value);
   });
 });

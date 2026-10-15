@@ -1,4 +1,4 @@
-import { assignStep, auxWriteStep, compareStep, markStep, passEndStep, unmarkStep, type Step } from '../core/step';
+import { assignStep, auxWriteStep, compareStep, markStep, passEndStep, unmarkStep, withVars, type Step } from '../core/step';
 
 const PSEUDO = [
   { line: 1, indent: 0, text: 'MergeSort(A):' },
@@ -38,13 +38,15 @@ export const merge = {
       return out;
     };
 
-    const mergeRun = (lo: number, mid: number, hi: number): void => {
+    // width 作为参数传入：它本是外层 for 的循环变量，作用域在 for 语句内，
+    // 闭包直接引用不到（会 ReferenceError），但变量值要带进步骤截图，故显式传入。
+    const mergeRun = (lo: number, mid: number, hi: number, width: number): void => {
       steps.push(markStep('range', span(lo, hi), 4, `归并 [${lo}, ${mid}] 与 [${mid + 1}, ${hi}]`, [lo, hi]));
       let i = lo;
       let j = mid + 1;
       let k = lo;
       while (i <= mid && j <= hi) {
-        steps.push(compareStep(i, j, 9, `比较 a[${i}]=${a[i]} 与 a[${j}]=${a[j]}`));
+        steps.push(withVars(compareStep(i, j, 9, `比较 a[${i}]=${a[i]} 与 a[${j}]=${a[j]}`), { lo, mid, hi, i, j, width }));
         if (a[i] <= a[j]) {
           // 相等时取左段（等值元素保持原相对次序 → 归并排序稳定）
           aux[k] = a[i];
@@ -71,7 +73,7 @@ export const merge = {
       }
       for (let t = lo; t <= hi; t++) {
         a[t] = aux[t];
-        steps.push(assignStep(t, aux[t], 13, `回填主数组 a[${t}] = ${aux[t]}`));
+        steps.push(withVars(assignStep(t, aux[t], 13, `回填主数组 a[${t}] = ${aux[t]}`), { k: t, lo, mid, hi, width }));
       }
       steps.push(unmarkStep('range', span(lo, hi), 13));
     };
@@ -82,7 +84,7 @@ export const merge = {
         const mid = Math.min(lo + width - 1, n - 1);
         const hi = Math.min(lo + 2 * width - 1, n - 1);
         if (mid >= hi) continue;
-        mergeRun(lo, mid, hi);
+        mergeRun(lo, mid, hi, width);
       }
       steps.push(unmarkStep('range', span(0, n - 1), 3));
       steps.push(passEndStep(a, 3, `宽度 ${width} 的一趟结束`));

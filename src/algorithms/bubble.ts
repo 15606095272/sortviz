@@ -1,4 +1,4 @@
-import { compareStep, markStep, noteStep, passEndStep, swapStep, type Step } from '../core/step';
+import { compareStep, markStep, noteStep, passEndStep, swapStep, withVars, type Step } from '../core/step';
 
 const PSEUDO = [
   { line: 1, indent: 0, text: 'for i = 0 to n-2:' },
@@ -27,11 +27,11 @@ export const bubble = {
       const end = n - 1 - i;
       let swapped = false;
       for (let j = 0; j < end; j++) {
-        steps.push(compareStep(j, j + 1, 4, `比较 a[${j}]=${a[j]} 与 a[${j + 1}]=${a[j + 1]}`));
+        steps.push(withVars(compareStep(j, j + 1, 4, `比较 a[${j}]=${a[j]} 与 a[${j + 1}]=${a[j + 1]}`), { i, j }));
         if (a[j] > a[j + 1]) {
           [a[j], a[j + 1]] = [a[j + 1], a[j]];
           swapped = true;
-          steps.push(swapStep(j, j + 1, 5, `a[${j}] > a[${j + 1}] → 交换，大的往右冒`));
+          steps.push(withVars(swapStep(j, j + 1, 5, `a[${j}] > a[${j + 1}] → 交换，大的往右冒`), { i, j }));
         }
       }
       steps.push(markStep('sorted', [end], 1, `第 ${i + 1} 趟结束：a[${end}] 已就位`));

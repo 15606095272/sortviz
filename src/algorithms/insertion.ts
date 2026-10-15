@@ -1,4 +1,4 @@
-import { assignStep, compareStep, markStep, passEndStep, type Step } from '../core/step';
+import { assignStep, compareStep, markStep, passEndStep, withVars, type Step } from '../core/step';
 
 const PSEUDO = [
   { line: 1, indent: 0, text: 'for i = 1 to n-1:' },
@@ -33,14 +33,14 @@ export const insertion = {
       while (j >= 0) {
         // 下标 i 是「空位」：key 已取出，a[i] 的显示值可能已被后移元素覆盖，
         // 比较的对象始终是 key 的值，故动作说明里写 key 而不是 a[i]。
-        steps.push(compareStep(j, i, 4, `比较 a[${j}]=${a[j]} 与待插入的 key=${key}`));
+        steps.push(withVars(compareStep(j, i, 4, `比较 a[${j}]=${a[j]} 与待插入的 key=${key}`), { i, j }));
         if (a[j] <= key) break;
         a[j + 1] = a[j];
-        steps.push(assignStep(j + 1, a[j], 5, `a[${j}]=${a[j]} > key → 后移一位到 a[${j + 1}]`));
+        steps.push(withVars(assignStep(j + 1, a[j], 5, `a[${j}]=${a[j]} > key → 后移一位到 a[${j + 1}]`), { i, j }));
         j -= 1;
       }
       a[j + 1] = key;
-      steps.push(assignStep(j + 1, key, 7, `key=${key} 落到下标 ${j + 1}`));
+      steps.push(withVars(assignStep(j + 1, key, 7, `key=${key} 落到下标 ${j + 1}`), { i, j }));
       steps.push(markStep('sorted', [i], 1, `第 ${i} 趟结束：有序区扩到 [0,${i}]`));
       steps.push(passEndStep(a, 1, `第 ${i} 趟结束`));
     }

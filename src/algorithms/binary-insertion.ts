@@ -1,4 +1,4 @@
-import { assignStep, compareStep, markStep, noteStep, passEndStep, type Step } from '../core/step';
+import { assignStep, compareStep, markStep, noteStep, passEndStep, withVars, type Step } from '../core/step';
 
 const PSEUDO = [
   { line: 1, indent: 0, text: 'for i = 1 to n-1:' },
@@ -36,7 +36,7 @@ export const binaryInsertion = {
       while (low <= high) {
         const mid = (low + high) >> 1;
         // 下标 i 是空位（key 已取出），比较对象始终是 key，故说明里写 key
-        steps.push(compareStep(mid, i, 5, `折半比较 a[${mid}]=${a[mid]} 与 key=${key}`));
+        steps.push(withVars(compareStep(mid, i, 5, `折半比较 a[${mid}]=${a[mid]} 与 key=${key}`), { i, mid, low, high }));
         if (a[mid] <= key) {
           // 等值时往右半区找：相等元素的相对次序不变 → 稳定
           steps.push(noteStep(`a[${mid}]=${a[mid]} ≤ key=${key} → 插入位置在右半区`, 6));
@@ -48,10 +48,10 @@ export const binaryInsertion = {
       }
       for (let j = i - 1; j >= low; j--) {
         a[j + 1] = a[j];
-        steps.push(assignStep(j + 1, a[j], 8, `后移一位：a[${j}] → a[${j + 1}]`));
+        steps.push(withVars(assignStep(j + 1, a[j], 8, `后移一位：a[${j}] → a[${j + 1}]`), { i, low }));
       }
       a[low] = key;
-      steps.push(assignStep(low, key, 9, `key=${key} 落到下标 ${low}`));
+      steps.push(withVars(assignStep(low, key, 9, `key=${key} 落到下标 ${low}`), { i, low }));
       steps.push(markStep('sorted', [i], 1, `第 ${i} 趟结束：有序区扩到 [0,${i}]`));
       steps.push(passEndStep(a, 1, `第 ${i} 趟结束`));
     }

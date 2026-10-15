@@ -31,6 +31,13 @@ export const COPY = {
   varJ: 'j',
   varI: 'i（空位）',
   varKey: 'key',
+  // 算法步骤用 withVars 带出的变量值的标签（deriveVars 真值优先渲染）。
+  // 缺标签时面板回落显示键名，故这张表不必覆盖所有可能出现的键。
+  varLabels: {
+    i: 'i', j: 'j', mid: 'mid', low: 'low', high: 'high', pivot: 'pivot', key: 'key',
+    minIndex: '最小下标', gap: '增量 d', k: 'k', width: '段长 width', lo: 'lo', hi: 'hi',
+    place: '当前位', root: 'root', child: 'child', heapSize: '堆大小', depth: '递归深度', placed: '已就位',
+  },
   hintStructure: '尚未开始 · 播放或单步后这里显示结构变化',
   legendSorted: '已就位',
   legendComparing: '正在比较',

@@ -1,4 +1,4 @@
-import { assignStep, auxWriteStep, markStep, noteStep, passEndStep, type Step } from '../core/step';
+import { assignStep, auxWriteStep, markStep, noteStep, passEndStep, withVars, type Step } from '../core/step';
 
 const PSEUDO = [
   { line: 1, indent: 0, text: 'RadixSort(A):' },
@@ -30,19 +30,19 @@ export const radix = {
     for (let d = 0; d < digits; d++) {
       const place = posName[d] ?? String(d + 1);
       const buckets: number[][] = Array.from({ length: base }, () => []);
-      steps.push(noteStep(`第 ${d + 1} 趟：按${place}位分配（低位优先 LSD）`, 3));
+      steps.push(withVars(noteStep(`第 ${d + 1} 趟：按${place}位分配（低位优先 LSD）`, 3), { place: d + 1 }));
       for (let i = 0; i < n; i++) {
         const digit = Math.floor(Math.abs(a[i]) / base ** d) % base;
-        steps.push(markStep('active', [i], 4, `a[${i}]=${a[i]} 的${place}位是 ${digit} → 放入桶 ${digit}`));
+        steps.push(withVars(markStep('active', [i], 4, `a[${i}]=${a[i]} 的${place}位是 ${digit} → 放入桶 ${digit}`), { i, place: d + 1 }));
         buckets[digit].push(a[i]);
       }
       // 按桶序收集（桶内 FIFO → 稳定）；辅助数组按收集顺序写入，回填主数组记移动
       let k = 0;
       for (let b = 0; b < base; b++) {
         for (const value of buckets[b]) {
-          steps.push(auxWriteStep(k, value, 5, `从桶 ${b} 取出 ${value} → aux[${k}]`));
+          steps.push(withVars(auxWriteStep(k, value, 5, `从桶 ${b} 取出 ${value} → aux[${k}]`), { k, place: d + 1 }));
           a[k] = value;
-          steps.push(assignStep(k, value, 6, `回填 a[${k}] = ${value}`));
+          steps.push(withVars(assignStep(k, value, 6, `回填 a[${k}] = ${value}`), { k, place: d + 1 }));
           k += 1;
         }
       }

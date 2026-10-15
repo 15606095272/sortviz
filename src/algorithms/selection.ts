@@ -1,4 +1,4 @@
-import { compareStep, markStep, noteStep, passEndStep, swapStep, unmarkStep, type Step } from '../core/step';
+import { compareStep, markStep, noteStep, passEndStep, swapStep, unmarkStep, withVars, type Step } from '../core/step';
 
 const PSEUDO = [
   { line: 1, indent: 0, text: 'for i = 0 to n-2:' },
@@ -27,7 +27,7 @@ export const selection = {
       // 'pivot' 标记在这里表示「当前最小候选」——数组视图会把它画成紫色基准格
       steps.push(markStep('pivot', [minIndex], 2, `第 ${i + 1} 趟：先假定 a[${i}]=${a[i]} 是剩余部分的最小值`));
       for (let j = i + 1; j < n; j++) {
-        steps.push(compareStep(j, minIndex, 4, `比较 a[${j}]=${a[j]} 与当前最小 a[${minIndex}]=${a[minIndex]}`));
+        steps.push(withVars(compareStep(j, minIndex, 4, `比较 a[${j}]=${a[j]} 与当前最小 a[${minIndex}]=${a[minIndex]}`), { i, j, minIndex }));
         if (a[j] < a[minIndex]) {
           steps.push(unmarkStep('pivot', [minIndex], 4, `a[${j}]=${a[j]} 更小 → 更新最小下标`));
           minIndex = j;
@@ -37,7 +37,7 @@ export const selection = {
       steps.push(unmarkStep('pivot', [minIndex], 5, `本趟最小下标确定为 ${minIndex}`));
       if (minIndex !== i) {
         [a[i], a[minIndex]] = [a[minIndex], a[i]];
-        steps.push(swapStep(i, minIndex, 5, `交换 a[${i}] 与 a[${minIndex}] → a[${i}]=${a[i]} 就位`));
+        steps.push(withVars(swapStep(i, minIndex, 5, `交换 a[${i}] 与 a[${minIndex}] → a[${i}]=${a[i]} 就位`), { i, minIndex }));
       } else {
         steps.push(noteStep(`a[${i}]=${a[i]} 本来就是最小值 → 本趟不交换`, 5));
       }

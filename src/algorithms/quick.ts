@@ -1,4 +1,4 @@
-import { compareStep, markStep, passEndStep, swapStep, noteStep, unmarkStep, type Step } from '../core/step';
+import { compareStep, markStep, passEndStep, swapStep, noteStep, unmarkStep, withVars, type Step } from '../core/step';
 
 const PSEUDO = [
   { line: 1, indent: 0, text: 'QuickSort(A, low, high):' },
@@ -34,12 +34,12 @@ export const quick = {
       let i = low;
       steps.push(markStep('pivot', [low], 7, `pivot = ${pivot}（取区间第一个元素）`));
       for (let j = low + 1; j <= high; j++) {
-        steps.push(compareStep(j, low, 9, `比较 a[${j}]=${a[j]} 与 pivot=${pivot}`));
+        steps.push(withVars(compareStep(j, low, 9, `比较 a[${j}]=${a[j]} 与 pivot=${pivot}`), { i, j, low, high, pivot }));
         if (a[j] < pivot) {
           i += 1;
           if (i !== j) {
             [a[i], a[j]] = [a[j], a[i]];
-            steps.push(swapStep(i, j, 10, `a[${j}]=${a[j]} < pivot → 交换 a[${i}] 与 a[${j}]`));
+            steps.push(withVars(swapStep(i, j, 10, `a[${j}]=${a[j]} < pivot → 交换 a[${i}] 与 a[${j}]`), { i, j, low, high, pivot }));
           } else {
             steps.push(noteStep(`a[${j}]=${a[j]} < pivot → i 前移，位置本来就对，无需交换`, 10));
           }
@@ -47,7 +47,7 @@ export const quick = {
       }
       if (i !== low) {
         [a[low], a[i]] = [a[i], a[low]];
-        steps.push(swapStep(low, i, 11, `扫描结束 → 交换 a[${low}] 与 a[${i}]，pivot 落到下标 ${i}`));
+        steps.push(withVars(swapStep(low, i, 11, `扫描结束 → 交换 a[${low}] 与 a[${i}]，pivot 落到下标 ${i}`), { i, low, high, pivot }));
       }
       steps.push(unmarkStep('pivot', [i], 12, `pivot=${pivot} 就位`));
       steps.push(markStep('sorted', [i], 12, `a[${i}]=${pivot} 已就位`));
