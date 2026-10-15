@@ -11,7 +11,7 @@
   --text: #3a332a;
   --text-strong: #4a4032;                     /* 格子数字 / 等宽数值 */
   --text-head: #5d5344;                       /* 卡片标题 */
-  --muted: #8d8271;
+  --muted: #726859; /* 次要文字：原 #8d8271 对白卡只有 3.71:1，加深到 5.38:1 达标 */
   --idx-color: #c0b5a3;                       /* 伪代码行号 */
   --radius: 16px;
   --radius-sm: 10px;
@@ -20,7 +20,7 @@
   /* 状态语义色 */
   --c-default-bg: #fdfaf4;
   --c-default-line: #e9dfd1;
-  --c-comparing: #c2915f;
+  --c-comparing: #9c6d38; /* 原 #c2915f 上压白字仅 2.80:1，加深到 4.51:1 */
   --c-comparing-bg: #fbeee4;
   --c-comparing-line: #e8c8ae;
   --c-swapping: #b5654a;
@@ -31,7 +31,7 @@
   --c-sorted-bg: #eef3e9;
   --c-sorted-line: #c6d6b8;
   --c-aux: #6b8ea8;
-  --c-accent: #7d8f69;
+  --c-accent: #657a4e; /* 原 #7d8f69 上压白字仅 3.50:1，加深到 4.72:1 */
   --text-on-accent: #ffffff;
 
   /* 面 / 底 */
@@ -305,8 +305,9 @@ button.pri {
 button.pri:hover { filter: brightness(1.05); }
 
 button.play {
-  background: var(--c-comparing);
-  border-color: var(--c-comparing);
+  /* 主操作用强调色（原先借的是「正在比较」的奶茶色，压白字仅 2.80:1，深色下更差） */
+  background: var(--c-accent);
+  border-color: var(--c-accent);
   color: var(--text-on-accent);
   font-weight: 600;
   padding: 7px 20px;
