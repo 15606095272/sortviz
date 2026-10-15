@@ -461,6 +461,22 @@ input[type="range"].seek::-moz-range-thumb { opacity: 0; }
 .ptr .pl-j { background: var(--c-aux); }
 .ptr .pl-pivot { background: var(--c-pivot); }
 
+/* 辅助数组行（归并 / 基数）：与主数组同列宽，格子更小、虚线框，无 aux 步骤时整行隐藏 */
+.cellrow.auxrow { gap: 4px; }
+
+.auxlab {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.auxrow .cell {
+  height: 34px;
+  font-size: 13px;
+  border-style: dashed;
+  background: var(--c-default-bg);
+}
+
 .legend {
   display: flex;
   gap: 12px;
