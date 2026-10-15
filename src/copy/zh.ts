@@ -45,6 +45,9 @@ export const COPY = {
   legendDefault: '待处理',
   treeDepth: '递归深度',
   indexRange: '下标 {from} – {to}',
+  indexBaseLabel: '下标',
+  indexBaseZero: '0 基',
+  indexBaseOne: '1 基',
   structureTagDefault: '结构变化',
   structureTag: {
     insertion: '插入 → 有序区扩张',

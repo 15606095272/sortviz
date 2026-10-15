@@ -46,13 +46,14 @@ describe('控制条', () => {
       onStepBack: () => calls.push('back'),
       onSeek: (i) => calls.push(`seek:${i}`),
       onSpeed: (m) => calls.push(`speed:${m}`),
+      onIndexBase: (base) => calls.push(`indexbase:${base}`),
     });
     return { host, controls, calls, applied };
   };
 
   it('算法 chips 按注册顺序渲染，点击回调带 id', () => {
     const { host, calls } = setup();
-    const chips = [...host.querySelectorAll('.chip')];
+    const chips = [...host.querySelectorAll('.chips .chip')];
     expect(chips.map((c) => c.textContent)).toEqual(['插入', '折半插入', '希尔', '冒泡', '快排', '选择', '堆排', '归并', '基数']);
     // 注册顺序变成 插入/折半插入/希尔/冒泡/快排/选择/堆排，快排（quick）仍是第 5 个 chip
     (chips[4] as HTMLElement).click();
@@ -90,5 +91,16 @@ describe('控制条', () => {
     expect(playBtn()).toBe(COPY.replay);
     controls.setProgress(0, 0, 2, false);
     expect(playBtn()).toBe(COPY.play);
+  });
+
+  it('下标进制胶囊渲染且点击回调带 base', () => {
+    const { host, controls, calls } = setup();
+    const caps = [...host.querySelectorAll('.indexbase .chip')] as HTMLElement[];
+    expect(caps.map((c) => c.textContent)).toEqual([COPY.indexBaseZero, COPY.indexBaseOne]);
+    caps[1].click();
+    expect(calls).toContain('indexbase:1');
+    controls.setIndexBase(1);
+    expect(caps[1].classList.contains('on')).toBe(true);
+    expect(caps[0].classList.contains('on')).toBe(false);
   });
 });

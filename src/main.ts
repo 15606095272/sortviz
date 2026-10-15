@@ -11,6 +11,7 @@ import { renderPseudocode, renderVars, renderCounters, renderActionNote, renderC
 import { renderPassTable } from './ui/pass-table';
 import { COPY } from './copy/zh';
 import type { Step } from './core/step';
+import { formatIndex, type IndexBase } from './core/index-base';
 
 const MAX_STEPS = 20000;
 const DEFAULT_DATA = [49, 38, 65, 97, 76, 13, 27, 49];
@@ -25,17 +26,18 @@ export function mountApp(root: HTMLElement): void {
   let data = [...DEFAULT_DATA];
   let steps: Step[] = [];
   let controls: Controls | null = null;      // 先声明后赋值：renderAt 内部要用
+  let indexBase: IndexBase = 0;              // 展示口径：内部一律 0 基，切 1 基只改显示与文案
 
   const renderAt = (index: number): void => {
     const algo = getAlgorithm(algorithmId);
-    const ctx: ViewContext = { data, algorithmId };
+    const ctx: ViewContext = { data, algorithmId, indexBase };
     const state = replay(data, steps, index);
     getView('array')?.render(state, ctx);
     getView('structure')?.render(state, ctx);
     // 卡片右上角标签（实物稿里是「下标 0 – 7」「快排 → 递归划分树」这类动态说明）
     layout.arrayTag.textContent = COPY.indexRange
-      .replace('{from}', '0')
-      .replace('{to}', String(Math.max(data.length - 1, 0)));
+      .replace('{from}', String(formatIndex(0, indexBase)))
+      .replace('{to}', String(formatIndex(Math.max(data.length - 1, 0), indexBase)));
     layout.structTag.textContent =
       (COPY.structureTag as Record<string, string>)[algorithmId] ?? COPY.structureTagDefault;
     // 第 0 步还没执行任何一步，state.lastCodeLine 是 0（哨兵值，伪代码里没有第 0 行）。
@@ -44,7 +46,7 @@ export function mountApp(root: HTMLElement): void {
     renderPseudocode(layout.pseudoHost, algo.pseudocode, activeLine);
     renderVars(layout.varsHost, state, algorithmId);
     renderCounters(layout.countersHost, deriveStats(steps, index));
-    renderActionNote(layout.noteHost, state.lastNote);
+    renderActionNote(layout.noteHost, state.lastNote, indexBase);
     renderComplexity(layout.complexityHost, algo.complexity, algo.stable);
     const passes = derivePasses(steps, index);
     renderPassTable(layout.passesHost, data, passes, passes.length > 0 ? passes.length : null);
@@ -75,12 +77,18 @@ export function mountApp(root: HTMLElement): void {
     onStepBack: () => player.stepBack(),
     onSeek: (i) => player.seek(i),
     onSpeed: (m) => player.setSpeed(m),
+    // 只重渲染当前步：不重新 mount、不重跑算法（下标进制与算法结果无关）
+    onIndexBase: (base) => {
+      indexBase = base;
+      controls?.setIndexBase(base);
+      renderAt(player.state.index);
+    },
   });
 
   function rebuild(nextAlgorithmId = algorithmId, nextData = data): void {
     algorithmId = nextAlgorithmId;
     data = [...nextData];
-    const ctx: ViewContext = { data, algorithmId };
+    const ctx: ViewContext = { data, algorithmId, indexBase };
     steps = getAlgorithm(algorithmId).run(data);
     if (steps.length > MAX_STEPS) { steps = steps.slice(0, MAX_STEPS); controls?.setError(COPY.errorTooLong); }
     // 先 mount 再 setSteps：setSteps 会立刻 emit renderAt(0)，而视图的 render 在
@@ -91,6 +99,7 @@ export function mountApp(root: HTMLElement): void {
   }
 
   rebuild();
+  controls?.setIndexBase(indexBase);
 }
 
 function randomData(count: number): number[] {

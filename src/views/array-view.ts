@@ -1,12 +1,14 @@
 import type { ViewContext, ViewModule } from '../core/registry';
 import type { ViewState } from '../core/replay';
 import { COPY } from '../copy/zh';
+import { formatIndex, type IndexBase } from '../core/index-base';
 
 const MAX_PER_ROW = 16;
 
 export function createArrayView(): ViewModule {
   let host: HTMLElement | null = null;
   let cells: HTMLElement[] = [];
+  let idxNums: HTMLElement[] = [];
   let ptrs: HTMLElement[] = [];
   let auxCells: HTMLElement[] = [];
   let auxRows: HTMLElement[] = [];
@@ -18,9 +20,11 @@ export function createArrayView(): ViewModule {
     host.innerHTML = '';
     host.classList.add('array-view');
     cells = [];
+    idxNums = [];
     ptrs = [];
     auxCells = [];
     auxRows = [];
+    const base: IndexBase = ctx.indexBase ?? 0;
 
     for (let start = 0; start < data.length; start += MAX_PER_ROW) {
       const size = Math.min(MAX_PER_ROW, data.length - start);
@@ -47,7 +51,7 @@ export function createArrayView(): ViewModule {
         box.className = 'cellbox';
         const idx = document.createElement('div');
         idx.className = 'idxnum';
-        idx.textContent = String(index);
+        idx.textContent = String(formatIndex(index, base));
         const cell = document.createElement('div');
         cell.className = 'cell';
         cell.dataset.index = String(index);
@@ -68,6 +72,7 @@ export function createArrayView(): ViewModule {
         auxIdxRow.append(auxBox);
 
         cells[index] = cell;
+        idxNums[index] = idx;
         ptrs[index] = ptr;
         auxCells[index] = auxCell;
       }
@@ -78,8 +83,9 @@ export function createArrayView(): ViewModule {
     }
   }
 
-  function render(state: ViewState, _ctx: ViewContext): void {
+  function render(state: ViewState, ctx: ViewContext): void {
     if (!host) return;
+    const base: IndexBase = ctx.indexBase ?? 0;
     const pointerLabels = new Map<number, string[]>();
     state.activeIndices.forEach((index, order) => {
       const label = order === 0 ? 'i' : 'j';
@@ -92,6 +98,9 @@ export function createArrayView(): ViewModule {
     for (let i = 0; i < state.data.length; i++) {
       const cell = cells[i];
       if (!cell) continue;
+      // 下标文本随开关换算（切进制不必重新 mount）；data-index 仍是 0 基的 DOM 契约
+      const idxNum = idxNums[i];
+      if (idxNum) idxNum.textContent = String(formatIndex(i, base));
       cell.textContent = String(state.data[i]);
       const marks = new Set<string>(state.marks.get(i) ?? []);
       if (state.activeIndices.includes(i)) marks.add('comparing');
@@ -127,7 +136,7 @@ export function createArrayView(): ViewModule {
 
   function destroy(): void {
     if (host) { host.innerHTML = ''; host.classList.remove('array-view'); }
-    host = null; cells = []; ptrs = []; auxCells = []; auxRows = [];
+    host = null; cells = []; idxNums = []; ptrs = []; auxCells = []; auxRows = [];
   }
 
   return { kind: 'array', mount, render, destroy };

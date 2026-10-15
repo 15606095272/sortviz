@@ -1,5 +1,6 @@
 import type { Step } from './step';
 import type { ViewState } from './replay';
+import type { IndexBase } from './index-base';
 
 export type ViewKind = 'array' | 'structure' | 'bar';
 export type AlgorithmCategory = 'insert' | 'swap' | 'select' | 'merge' | 'radix' | 'search' | 'tree';
@@ -19,7 +20,8 @@ export interface AlgorithmModule {
   run(data: number[]): Step[];
 }
 
-export interface ViewContext { data: number[]; algorithmId: string }
+// indexBase 可选：既有测试与装配层大量构造 { data, algorithmId }，缺省视作 0 基
+export interface ViewContext { data: number[]; algorithmId: string; indexBase?: IndexBase }
 
 export interface ViewModule {
   kind: ViewKind;

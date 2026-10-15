@@ -1,5 +1,6 @@
 import { COPY } from '../copy/zh';
 import { getAlgorithm } from '../core/registry';
+import type { IndexBase } from '../core/index-base';
 
 export type ParseResult = { ok: true; data: number[] } | { ok: false; message: string };
 
@@ -31,12 +32,14 @@ export interface ControlsHandlers {
   onStepBack(): void;
   onSeek(index: number): void;
   onSpeed(multiplier: number): void;
+  onIndexBase(base: IndexBase): void;
 }
 
 export interface Controls {
   setError(message: string | null): void;
   setProgress(index: number, total: number, speed: number, playing: boolean): void;
   setPass(text: string): void;         // 进度条右侧的趟次文案（实物稿有，缺省留空）
+  setIndexBase(base: IndexBase): void; // 装配层回灌当前下标进制，同步胶囊高亮（与 setPass 同风格）
 }
 
 /** 实物稿里的默认演示数据（数据结构的经典样例序列） */
@@ -171,6 +174,30 @@ export function createControls(host: HTMLElement, handlers: ControlsHandlers): C
     countValue,
   );
 
+  // —— 下标进制（0 基 / 1 基）——
+  // 内部一律 0 基，这里只切换展示口径：切到 1 基后数组下标与动作说明里的 a[k] 一起 +1，便于对照 408 教材
+  const indexBaseGroup = mk('div', 'ctrlgroup indexbase');
+  const baseCaps: { base: IndexBase; cap: HTMLElement }[] = [];
+  const setIndexBase = (base: IndexBase): void => {
+    for (const item of baseCaps) item.cap.classList.toggle('on', item.base === base);
+  };
+  const baseCap = (base: IndexBase, text: string): HTMLElement => {
+    const cap = mk('span', 'chip', text);
+    cap.dataset.base = String(base);
+    cap.addEventListener('click', () => {
+      setIndexBase(base);              // 本地先亮（与算法 chips 同风格），装配层随后回灌
+      handlers.onIndexBase(base);
+    });
+    baseCaps.push({ base, cap });
+    return cap;
+  };
+  indexBaseGroup.append(
+    mk('span', 'lab', COPY.indexBaseLabel),
+    baseCap(0, COPY.indexBaseZero),
+    baseCap(1, COPY.indexBaseOne),
+  );
+  setIndexBase(0);
+
   // —— 播放区 ——
   const transport = mk('div', 'ctrlgroup transport');
   const toStartBtn = buttonEl('ic', '⏮');
@@ -217,7 +244,7 @@ export function createControls(host: HTMLElement, handlers: ControlsHandlers): C
   seekInput.addEventListener('input', () => handlers.onSeek(Number(seekInput.value)));
   progress.append(bar, ptext, seekInput);
 
-  host.append(chipRow, mk('span', 'sep'), dataGroup, mk('span', 'sep'), transport, progress, errRow);
+  host.append(chipRow, mk('span', 'sep'), dataGroup, mk('span', 'sep'), indexBaseGroup, mk('span', 'sep'), transport, progress, errRow);
 
   const setProgress = (nextIndex: number, nextTotal: number, speed: number, isPlaying: boolean): void => {
     index = nextIndex;
@@ -236,5 +263,5 @@ export function createControls(host: HTMLElement, handlers: ControlsHandlers): C
 
   const setPass = (text: string): void => { passText.textContent = text; };
 
-  return { setError, setProgress, setPass };
+  return { setError, setProgress, setPass, setIndexBase };
 }

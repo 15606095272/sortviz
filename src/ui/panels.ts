@@ -2,6 +2,7 @@ import type { CodeLine, Complexity } from '../core/registry';
 import type { ViewState } from '../core/replay';
 import type { Stats } from '../core/step';
 import { COPY } from '../copy/zh';
+import { rewriteIndices, type IndexBase } from '../core/index-base';
 
 export interface VarEntry { label: string; value: string }
 
@@ -67,9 +68,9 @@ export function renderCounters(host: HTMLElement, stats: Stats): void {
   );
 }
 
-/** 当前动作说明（文本直接来自步骤的 note） */
-export function renderActionNote(host: HTMLElement, note: string): void {
-  host.textContent = note;
+/** 当前动作说明（文本直接来自步骤的 note；1 基展示时把 a[k] / A[k] 形式的下标 +1） */
+export function renderActionNote(host: HTMLElement, note: string, indexBase: IndexBase = 0): void {
+  host.textContent = rewriteIndices(note, indexBase);
 }
 
 /** 复杂度区：平均 / 最坏 / 空间 / 稳定性 四行 */
