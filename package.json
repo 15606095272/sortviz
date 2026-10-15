@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
+    "build:single": "vite build --config vite.config.single.ts && node scripts/inline-single.mjs",
     "preview": "vite preview",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest"

@@ -14,7 +14,18 @@ npm run preview    # 本地预览构建产物（http://localhost:4173）
 npm test           # 单元测试
 ```
 
-本地看效果请用 `npm run preview` 或 `npm run dev`。**不要**直接双击 `dist/index.html`：Chrome 对 `type="module"` 脚本与带 `crossorigin` 的 CSS 在 `file://` 下按 CORS 拦截，会得到空白页（双击即用的单文件版在 P2 计划中）。
+### 本地使用
+
+两种方式看效果（**不要**直接双击 `dist/index.html`）：
+
+| 方式 | 命令 | 说明 |
+|------|------|------|
+| 起服务器看构建产物 | `npm run preview` | 打开提示的 http://localhost:4173 ；`npm run dev` 同理（带热更新） |
+| 零服务器单文件 | `npm run build:single` | 产出 `dist-single/sortviz.html`，**双击即可**，`file://` 直接可用 |
+
+单文件版做了什么：用第二个配置 `vite.config.single.ts` 打成 IIFE 且 CSS 不拆分（`dist-single/app.js` + `app.css`），再由 `scripts/inline-single.mjs` 把 JS/CSS 全部内联进同一个 HTML。
+
+**为什么需要它**：`dist/index.html` 里的脚本是 `type="module"`、CSS 带 `crossorigin`；Chrome 在 `file://` 下会按 CORS 拦截这两者，于是双击打开是一片空白页。单文件版没有外部 module / 带 crossorigin 的 CSS 请求，所以双击就能用（也方便直接发给别人）。
 
 ## 已支持（9 种内部排序）
 
@@ -99,6 +110,8 @@ npm test
 稳定性断言是可证伪的：例如插入/折半插入用 `[49,49,38]` 的移动数锁定「等值插到右侧」，归并用「等值取左段」，基数用「个位相同的 97 仍排在 27 之前」。
 
 另有一个浏览器交互冒烟脚本 `scripts/interaction-smoke.mjs`（零依赖，用 CDP 真点页面：播放推进/暂停/单步/回开头/切算法/伪代码与结构视图联动/非法输入/换数据），改动 UI 后可跑一遍确认「页面不是静态的」。用法见脚本头部注释。
+
+单文件构建由 `scripts/inline-single.mjs` 完成（`npm run build:single` 调用它把 JS/CSS 内联进 `dist-single/sortviz.html`），配合 `vite.config.single.ts` 使用，详见「快速开始 → 本地使用」。
 
 ## 状态
 
