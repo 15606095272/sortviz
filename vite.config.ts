@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: './',            // 关键：产物用相对路径，dist/index.html 可被 file:// 直接打开
+  base: './',            // 相对路径：产物能部署在任意子路径（GitHub Pages 的 /repo/ 下也正常）
   build: { outDir: 'dist', target: 'es2022' },
   test: { environment: 'jsdom', globals: true, include: ['tests/**/*.test.ts'] },
 });
