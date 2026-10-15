@@ -54,7 +54,10 @@ export function mountApp(root: HTMLElement): void {
       passNo > 0
         ? COPY.stateTagPass.replace('{pass}', String(passNo)).replace('{depth}', depth)
         : index > 0
-          ? COPY.stateTagProgress.replace('{depth}', depth)
+          ? // 只有真的在递归里（callStack 非空）才报递归深度，堆/冒泡这类没有递归
+            state.callStack.length > 0
+            ? COPY.stateTagProgress.replace('{depth}', depth)
+            : COPY.stateTagRunning
           : COPY.stateTagStart;
     controls?.setPass(passNo > 0 ? COPY.pass.replace('{pass}', String(passNo)) : '');
     controls?.setProgress(index, steps.length, player.state.speed, player.state.playing);

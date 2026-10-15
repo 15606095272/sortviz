@@ -95,6 +95,8 @@ export function createArrayView(): ViewModule {
       cell.textContent = String(state.data[i]);
       const marks = new Set<string>(state.marks.get(i) ?? []);
       if (state.activeIndices.includes(i)) marks.add('comparing');
+      // 堆排序：heapSize 是「堆内最后一个下标」，其左侧即当前堆区（虚线边框，随堆收缩）
+      if (state.heapSize !== null && i <= state.heapSize) marks.add('heap');
       cell.dataset.mark = [...marks].join(' ');
       const ptr = ptrs[i];
       if (ptr) {

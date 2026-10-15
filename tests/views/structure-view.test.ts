@@ -58,6 +58,9 @@ describe('结构视图', () => {
     expect(nodes[0].textContent).toContain('97');
     expect(nodes[1].getAttribute('data-parent')).toBe('0');
     expect(nodes[7].getAttribute('data-parent')).toBe('3');
+    // 8 个节点应分成 4 层（1 / 2 / 4 / 1）——防止又塌成一竖列
+    const rows = [...host.querySelectorAll('.tree-level')];
+    expect(rows.map((r) => r.querySelectorAll('.heap-node').length)).toEqual([1, 2, 4, 1]);
   });
 
   it('只有 sorted 标记时渲染有序区/无序区条', () => {

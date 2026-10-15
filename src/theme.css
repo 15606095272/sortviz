@@ -468,6 +468,9 @@ input[type="range"].seek::-moz-range-thumb { opacity: 0; }
   gap: 4px;
 }
 
+/* 作者样式里的 display 会盖掉 UA 的 [hidden]{display:none}，必须显式补一条 */
+.auxrow[hidden] { display: none; }
+
 .auxbox {
   width: var(--cell-w);
   text-align: center;

@@ -52,14 +52,31 @@ export function createStructureView(): ViewModule {
   }
 
   function renderHeap(root: HTMLElement, state: ViewState): void {
+    // 按「层」分行排布：第 d 层最多 2^d 个节点，这样才看得出完全二叉树的形状
+    // （早先直接把节点顺序 append 进 flex 容器，结果塌成一竖列，没有任何树形）
     const size = (state.heapSize ?? state.data.length - 1);
-    for (let i = 0; i <= size && i < state.data.length; i++) {
-      const node = document.createElement('div');
-      node.className = 'heap-node';
-      node.dataset.index = String(i);
-      if (i > 0) node.dataset.parent = String(Math.floor((i - 1) / 2));
-      node.textContent = String(state.data[i]);
-      root.append(node);
+    let index = 0;
+    let level = 0;
+    while (index <= size && index < state.data.length) {
+      if (level > 0) {
+        const connector = document.createElement('div');
+        connector.className = 'connector';
+        root.append(connector);
+      }
+      const row = document.createElement('div');
+      row.className = 'tree-level';
+      const count = Math.min(2 ** level, size - index + 1);
+      for (let k = 0; k < count; k++) {
+        const node = document.createElement('div');
+        node.className = 'heap-node';
+        node.dataset.index = String(index);
+        if (index > 0) node.dataset.parent = String(Math.floor((index - 1) / 2));
+        node.textContent = String(state.data[index]);
+        row.append(node);
+        index += 1;
+      }
+      root.append(row);
+      level += 1;
     }
   }
 
