@@ -425,6 +425,12 @@ input[type="range"].seek::-moz-range-thumb { opacity: 0; }
   box-shadow: var(--shadow-ring);
 }
 
+/* 堆排序：当前堆区（mark('heap') 覆盖的下标）用虚线边框标出边界，随堆缩小而收缩 */
+.cell[data-mark~="heap"] {
+  border-style: dashed;
+  border-color: var(--c-sorted-line);
+}
+
 .cell[data-mark~="pivot"] {
   background: var(--c-pivot-bg);
   border-color: var(--c-pivot-line);
