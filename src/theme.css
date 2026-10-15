@@ -906,3 +906,13 @@ input:focus-visible {
   .idxnum { font-size: 10px; }
   .legend { font-size: 11px; }
 }
+
+/* 系统开启「减弱动态效果」时，去掉所有过渡与动画 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

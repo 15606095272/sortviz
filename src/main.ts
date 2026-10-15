@@ -15,9 +15,13 @@ import { COPY } from './copy/zh';
 import type { Step } from './core/step';
 import { formatIndex, type IndexBase } from './core/index-base';
 import { applyTheme, loadTheme, saveTheme, type Theme } from './ui/theme';
+import { prefersReducedMotion, stepDuration } from './ui/motion';
 
 const MAX_STEPS = 20000;
 const DEFAULT_DATA = [49, 38, 65, 97, 76, 13, 27, 49];
+// 1x 速度下每步毫秒数。240 是 createPlayer 的默认值（此前 main.ts 未传该参数），
+// 这里只是把「隐含默认」显式化，不改默认播放速度。
+const BASE_MS_PER_STEP = 240;
 
 export function mountApp(root: HTMLElement): void {
   // 主题必须先落地再渲染第一帧：否则深色偏好用户会先看到一帧浅色（白闪）。
@@ -86,7 +90,13 @@ export function mountApp(root: HTMLElement): void {
     controls?.setProgress(index, steps.length, player.state.speed, player.state.playing);
   };
 
-  const player = createPlayer({ steps, onIndex: renderAt });
+  // 系统开启「减弱动态效果」时每步 0ms：播放直接跳变，不做逐帧动画。
+  // matchMedia 缺失（老浏览器 / 非浏览器环境）由 prefersReducedMotion 内部兜底成 false。
+  const msPerStep = stepDuration(
+    prefersReducedMotion(window.matchMedia?.bind(window)),
+    BASE_MS_PER_STEP,
+  );
+  const player = createPlayer({ steps, onIndex: renderAt, msPerStep });
 
   /** 走完一趟所需的「步数」：steps 里 passEnd 的下标 +1，seek 到它恰好停在那一趟末尾 */
   function passEnds(): number[] {
