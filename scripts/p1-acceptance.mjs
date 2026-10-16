@@ -38,6 +38,12 @@ await send('Page.reload', { ignoreCache: true });
 await sleep(1000);
 await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
 
+// 起始状态归一化：主题/方向/语言都会存进 localStorage，上一轮跑完的状态会让这一轮的
+// "切换前后有变化"类断言假失败（踩过一次：截图脚本把主题留成深色，导致浅→深断言不成立）
+await js(`localStorage.setItem('sortviz.theme','light'); localStorage.setItem('sortviz.order','asc'); localStorage.setItem('sortviz.indexBase','0'); 1`);
+await send('Page.reload', { ignoreCache: true });
+await sleep(1000);
+
 const failures = [];
 const check = (ok, label, detail) => {
   if (!ok) failures.push(`${label}：${detail}`);
@@ -155,6 +161,16 @@ await sleep(200);
 const err = await js(`document.querySelector('.err')?.textContent ?? ''`);
 check(err.length > 0, '非法输入给中文报错', err);
 
+// 先走到中段：第 0 步的变量面板只有「递归深度/已就位」这类公共量，没有索引类变量可比，
+// 直接断言"换算前后不同"会因为前提不成立而假失败（踩过一次）
+await js(`(() => {
+  const total = Number((document.body.textContent.match(/第 \\d+ \\/ (\\d+) 步/) || [0, 0])[1]);
+  const s = document.querySelector('.seek');
+  s.value = String(Math.max(1, Math.floor(total * 0.3)));
+  s.dispatchEvent(new Event('input', { bubbles: true }));
+  return 1;
+})()`);
+await sleep(250);
 const varsAt0 = await js(`[...document.querySelectorAll('.stats.vars .stat')].map(s => s.textContent).join(' | ')`);
 const idx0 = await js(`[...document.querySelectorAll('.idxnum')].slice(0, 3).map(n => n.textContent).join(',')`);
 await js(`(() => { const c = [...document.querySelectorAll('.indexbase .chip')].find(x => x.textContent === '1 基'); if (!c) return 'no-chip'; c.click(); return 1; })()`);
