@@ -82,9 +82,73 @@ describe('结构视图', () => {
     expect(nodes[0].textContent).toContain('97');
     expect(nodes[1].getAttribute('data-parent')).toBe('0');
     expect(nodes[7].getAttribute('data-parent')).toBe('3');
-    // 8 个节点应分成 4 层（1 / 2 / 4 / 1）——防止又塌成一竖列
-    const rows = [...host.querySelectorAll('.tree-level')];
-    expect(rows.map((r) => r.querySelectorAll('.heap-node').length)).toEqual([1, 2, 4, 1]);
+  });
+
+  it('堆：按二叉树几何排布，父子之间连线数 = 节点数 - 1', () => {
+    const data = [97, 76, 65, 49, 49, 13, 27, 38];
+    const host = document.createElement('div');
+    const view = createStructureView();
+    view.mount(host, { data, algorithmId: 'heap' });
+    const steps = [markStep('heap', [0, 1, 2, 3, 4, 5, 6, 7], 6, '建堆', [0, 7])];
+    view.render(replay(data, steps, 1), { data, algorithmId: 'heap' });
+    const nodes = [...host.querySelectorAll('.heap-node')] as HTMLElement[];
+    const edges = [...host.querySelectorAll('.heap-edge')];
+    expect(nodes).toHaveLength(8);
+    expect(edges).toHaveLength(7);
+    expect(host.querySelectorAll('.tree-level')).toHaveLength(0);
+    expect(host.querySelector('.tree-footer')!.textContent).toContain('8 个节点 / 4 层');
+  });
+
+  it('堆：每个节点的中心 x 符合 (slot+0.5)/2^level，且父节点中心 = 两孩子中点', () => {
+    const data = [97, 76, 65, 49, 49, 13, 27, 38];
+    const host = document.createElement('div');
+    const view = createStructureView();
+    view.mount(host, { data, algorithmId: 'heap' });
+    view.render(replay(data, [markStep('heap', [0, 1, 2, 3, 4, 5, 6, 7], 6, '建堆', [0, 7])], 1), { data, algorithmId: 'heap' });
+    const nodes = [...host.querySelectorAll('.heap-node')] as HTMLElement[];
+    const pctOf = (el: HTMLElement) => Number(el.style.left.replace('%', ''));
+    nodes.forEach((node, i) => {
+      const level = Math.floor(Math.log2(i + 1));
+      const slot = i - (2 ** level - 1);
+      expect(pctOf(node), `node ${i}`).toBeCloseTo(((slot + 0.5) / 2 ** level) * 100, 6);
+      expect(node.style.top).toBe(`${level * 58}px`);
+    });
+    // 父(x) = 两个孩子(x) 的中点 —— 树形布局的核心不变量
+    for (let i = 0; i + 2 < nodes.length; i++) {
+      const left = 2 * i + 1;
+      const right = 2 * i + 2;
+      if (right >= nodes.length) break;
+      expect(pctOf(nodes[i]), `parent of ${left}/${right}`).toBeCloseTo((pctOf(nodes[left]) + pctOf(nodes[right])) / 2, 6);
+    }
+  });
+
+  it('堆：连线从父节点底部连到子节点顶部', () => {
+    const data = [97, 76, 65, 49];
+    const host = document.createElement('div');
+    const view = createStructureView();
+    view.mount(host, { data, algorithmId: 'heap' });
+    view.render(replay(data, [markStep('heap', [0, 1, 2, 3], 6, '建堆', [0, 3])], 1), { data, algorithmId: 'heap' });
+    const nodes = [...host.querySelectorAll('.heap-node')] as HTMLElement[];
+    const edges = [...host.querySelectorAll('.heap-edge')] as SVGLineElement[];
+    expect(edges).toHaveLength(3);
+    for (const line of edges) {
+      const child = Number(line.dataset.child);
+      const parent = Number(line.dataset.parent);
+      expect(line.getAttribute('x1')).toBe(nodes[parent].style.left);
+      expect(line.getAttribute('x2')).toBe(nodes[child].style.left);
+      expect(line.getAttribute('y1')).toBe(`${Number(nodes[parent].style.top.replace('px', '')) + 30}px`);
+      expect(line.getAttribute('y2')).toBe(nodes[child].style.top);
+    }
+  });
+
+  it('堆：换出的元素不再渲染（只剩堆区内的节点与连线）', () => {
+    const data = [97, 76, 65, 49, 49, 13, 27, 38];
+    const host = document.createElement('div');
+    const view = createStructureView();
+    view.mount(host, { data, algorithmId: 'heap' });
+    view.render(replay(data, [markStep('heap', [0, 1, 2, 3], 6, '堆大小 4', [0, 3])], 1), { data, algorithmId: 'heap' });
+    expect(host.querySelectorAll('.heap-node')).toHaveLength(4);
+    expect(host.querySelectorAll('.heap-edge')).toHaveLength(3);
   });
 
   it('只有 sorted 标记时渲染有序区/无序区条', () => {

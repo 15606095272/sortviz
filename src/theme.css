@@ -636,17 +636,45 @@ input[type="range"].seek::-moz-range-thumb { opacity: 0; }
   text-align: center;
 }
 
-/* 堆：按层排布的小胶囊，节点下方标数组下标（不画连线） */
-.heap-node {
+/* 堆排序：真正的二叉树（节点绝对定位 + SVG 父子连线） */
+.heap-tree {
   position: relative;
-  padding: 8px 14px;
-  border-radius: 12px;
+  width: 100%;
+  overflow-x: auto;
+}
+
+.heap-edges {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.heap-edge {
+  stroke: var(--line-strong);
+  stroke-width: 1.5;
+}
+
+.heap-node {
+  position: absolute;
+  transform: translateX(-50%);
+  box-sizing: border-box;
+  width: clamp(20px, calc(88% / var(--heap-slots, 1)), 64px);
+  height: 30px;
+  line-height: 1;
+  padding: 8px 2px;
+  overflow: hidden;
+  text-align: center;
+  border-radius: 10px;
   border: 1px solid var(--line);
   background: var(--c-soft);
   font-family: var(--mono);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text-strong);
+  z-index: 1;
 }
 
 .heap-node::after {

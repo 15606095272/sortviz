@@ -69,33 +69,75 @@ export function createStructureView(): ViewModule {
     root.append(footer);
   }
 
+  const HEAP_NODE_H = 30;   // 与 CSS 里 .heap-node 的高度保持一致
+  const HEAP_ROW_GAP = 28;
+
+  /** 完全二叉树的经典几何：下标 i 在第 floor(log2(i+1)) 层，中心 x = ((slot+0.5)/2^level)*100% */
+  function heapGeometry(index: number): { level: number; slot: number; pct: number; top: number } {
+    const level = Math.floor(Math.log2(index + 1));
+    const slot = index - (2 ** level - 1);
+    return {
+      level,
+      slot,
+      pct: ((slot + 0.5) / 2 ** level) * 100,
+      top: level * (HEAP_NODE_H + HEAP_ROW_GAP),
+    };
+  }
+
   function renderHeap(root: HTMLElement, state: ViewState): void {
-    // 按「层」分行排布：第 d 层最多 2^d 个节点，这样才看得出完全二叉树的形状
-    // （早先直接把节点顺序 append 进 flex 容器，结果塌成一竖列，没有任何树形）
-    const size = (state.heapSize ?? state.data.length - 1);
-    let index = 0;
-    let level = 0;
-    while (index <= size && index < state.data.length) {
-      if (level > 0) {
-        const connector = document.createElement('div');
-        connector.className = 'connector';
-        root.append(connector);
-      }
-      const row = document.createElement('div');
-      row.className = 'tree-level';
-      const count = Math.min(2 ** level, size - index + 1);
-      for (let k = 0; k < count; k++) {
-        const node = document.createElement('div');
-        node.className = 'heap-node';
-        node.dataset.index = String(index);
-        if (index > 0) node.dataset.parent = String(Math.floor((index - 1) / 2));
-        node.textContent = String(state.data[index]);
-        row.append(node);
-        index += 1;
-      }
-      root.append(row);
-      level += 1;
+    const size = state.heapSize ?? state.data.length - 1;
+    const count = Math.max(0, Math.min(size + 1, state.data.length));
+    if (count === 0) return;
+
+    const levels = Math.floor(Math.log2(count)) + 1;
+    const slots = 2 ** (levels - 1);
+    const tree = document.createElement('div');
+    tree.className = 'heap-tree';
+    tree.dataset.size = String(count);
+    tree.dataset.levels = String(levels);
+    tree.style.height = `${(levels - 1) * (HEAP_NODE_H + HEAP_ROW_GAP) + HEAP_NODE_H}px`;
+    tree.style.setProperty('--heap-slots', String(slots));
+
+    // 连线先入，节点后入 —— 节点要盖在连线之上
+    const NS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('class', 'heap-edges');
+    svg.setAttribute('width', '100%');
+    svg.setAttribute('height', '100%');
+    for (let i = 1; i < count; i++) {
+      const parent = Math.floor((i - 1) / 2);
+      const pg = heapGeometry(parent);
+      const cg = heapGeometry(i);
+      const line = document.createElementNS(NS, 'line');
+      line.setAttribute('class', 'heap-edge');
+      line.setAttribute('x1', `${pg.pct}%`);
+      line.setAttribute('y1', `${pg.top + HEAP_NODE_H}px`);
+      line.setAttribute('x2', `${cg.pct}%`);
+      line.setAttribute('y2', `${cg.top}px`);
+      line.dataset.child = String(i);
+      line.dataset.parent = String(parent);
+      svg.append(line);
     }
+    tree.append(svg);
+
+    for (let i = 0; i < count; i++) {
+      const g = heapGeometry(i);
+      const node = document.createElement('div');
+      node.className = 'heap-node';
+      node.dataset.index = String(i);
+      node.dataset.level = String(g.level);
+      if (i > 0) node.dataset.parent = String(Math.floor((i - 1) / 2));
+      node.style.left = `${g.pct}%`;
+      node.style.top = `${g.top}px`;
+      node.textContent = String(state.data[i]);
+      tree.append(node);
+    }
+    root.append(tree);
+
+    const footer = document.createElement('div');
+    footer.className = 'tree-footer';
+    footer.textContent = COPY.heapFooter.replace('{count}', String(count)).replace('{levels}', String(levels));
+    root.append(footer);
   }
 
   function renderZones(root: HTMLElement, state: ViewState): void {

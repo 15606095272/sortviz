@@ -72,6 +72,10 @@ for (const name of ['插入', '折半插入', '希尔', '冒泡', '快排', '选
     高亮行数: document.querySelectorAll('.ln.hl').length,
     树层: document.querySelectorAll('.tree-level').length,
     堆节点: document.querySelectorAll('.heap-node').length,
+    堆连线: document.querySelectorAll('.heap-edge').length,
+    堆节点左位: [...document.querySelectorAll('.heap-node')].slice(0, 4).map((n) => n.style.left),
+    堆节点顶位: [...document.querySelectorAll('.heap-node')].slice(0, 4).map((n) => n.style.top),
+    堆槽位: document.querySelector('.heap-tree')?.style.getPropertyValue('--heap-slots') ?? '',
     堆父索引全对: [...document.querySelectorAll('.heap-node')].every((n) => {
       const i = Number(n.dataset.index);
       return i === 0 || n.dataset.parent === String(Math.floor((i - 1) / 2));
@@ -100,11 +104,16 @@ for (const name of ['插入', '折半插入', '希尔', '冒泡', '快排', '选
   if (kind === 'zone') check(info.区条 > 0, `${name} 结构视图=有序区条`, `区条 ${info.区条}`);
   if (kind === 'tree') check(info.树层 > 0, `${name} 结构视图=递归/分治树`, `层 ${info.树层}`);
   if (kind === 'heap') {
-    // 节点数 = 当前堆中元素个数（随换出堆顶递减），层数 = ceil(log2(节点数+1))；父索引必须是 floor((i-1)/2)
-    const levels = Math.ceil(Math.log2(info.堆节点 + 1));
+    // 真二叉树：节点数 = 当前堆内元素数（换出的不渲染），连线数 = 节点数 - 1，
+    // 节点中心 x = ((slot+0.5)/2^level)，父索引 = floor((i-1)/2)
+    const levels = Math.floor(Math.log2(info.堆节点)) + 1;
     check(info.堆节点 > 0, `${name} 结构视图=完全二叉树有节点`, `节点 ${info.堆节点}`);
     check(info.堆父索引全对 === true, `${name} 完全二叉树父索引 = floor((i-1)/2)`, String(info.堆父索引全对));
-    check(info.树层 === levels, `${name} 完全二叉树层数 = ceil(log2(n+1))`, `层 ${info.树层} vs 期望 ${levels}`);
+    check(info.树层 === 0, `${name} 不再用分层胶囊行（.tree-level 应为 0）`, `层 ${info.树层}`);
+    check(info.堆连线 === info.堆节点 - 1, `${name} 父子连线数 = 节点数 - 1`, `连线 ${info.堆连线} / 节点 ${info.堆节点}`);
+    check(info.堆槽位 === String(2 ** (levels - 1)), `${name} --heap-slots = 2^(层数-1)`, `${info.堆槽位} vs ${2 ** (levels - 1)}`);
+    check(info.脚注.includes('个节点'), `${name} 脚注给出节点数/层数`, info.脚注);
+    console.log(`  堆：${info.堆节点} 节点 / ${info.堆连线} 连线 / slots=${info.堆槽位} / left=${JSON.stringify(info.堆节点左位)} / top=${JSON.stringify(info.堆节点顶位)}`);
   }
   if (kind === 'group') {
     check(info.区条 === 8, `${name} 结构视图=分组着色 8 格`, `区条 ${info.区条}`);

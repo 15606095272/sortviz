@@ -41,6 +41,7 @@ export const COPY = {
   hintStructure: '尚未开始 · 播放或单步后这里显示结构变化',
   hintNoStructure: '这一步没有结构视图 · 看左侧数组与「每趟结果」',
   shellGroupFooter: '增量 d = {gap} · 分成 {gap} 组，组内做插入排序',
+  heapFooter: '完全二叉树 · {count} 个节点 / {levels} 层',
   legendSorted: '已就位',
   legendComparing: '正在比较',
   legendPivot: '本轮基准',
