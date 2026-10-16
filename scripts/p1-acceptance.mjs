@@ -73,6 +73,7 @@ for (const name of ['插入', '折半插入', '希尔', '冒泡', '快排', '选
     树层: document.querySelectorAll('.tree-level').length,
     堆节点: document.querySelectorAll('.heap-node').length,
     堆连线: document.querySelectorAll('.heap-edge').length,
+    堆下标数: document.querySelectorAll('.heap-idx').length,
     堆节点左位: [...document.querySelectorAll('.heap-node')].slice(0, 4).map((n) => n.style.left),
     堆节点顶位: [...document.querySelectorAll('.heap-node')].slice(0, 4).map((n) => n.style.top),
     堆槽位: document.querySelector('.heap-tree')?.style.getPropertyValue('--heap-slots') ?? '',
@@ -111,6 +112,7 @@ for (const name of ['插入', '折半插入', '希尔', '冒泡', '快排', '选
     check(info.堆父索引全对 === true, `${name} 完全二叉树父索引 = floor((i-1)/2)`, String(info.堆父索引全对));
     check(info.树层 === 0, `${name} 不再用分层胶囊行（.tree-level 应为 0）`, `层 ${info.树层}`);
     check(info.堆连线 === info.堆节点 - 1, `${name} 父子连线数 = 节点数 - 1`, `连线 ${info.堆连线} / 节点 ${info.堆节点}`);
+    check(info.堆下标数 === info.堆节点, `${name} 每个节点都有数组下标标签`, `${info.堆下标数} / ${info.堆节点}`);
     check(info.堆槽位 === String(2 ** (levels - 1)), `${name} --heap-slots = 2^(层数-1)`, `${info.堆槽位} vs ${2 ** (levels - 1)}`);
     check(info.脚注.includes('个节点'), `${name} 脚注给出节点数/层数`, info.脚注);
     console.log(`  堆：${info.堆节点} 节点 / ${info.堆连线} 连线 / slots=${info.堆槽位} / left=${JSON.stringify(info.堆节点左位)} / top=${JSON.stringify(info.堆节点顶位)}`);

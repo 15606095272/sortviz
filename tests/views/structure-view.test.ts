@@ -141,6 +141,20 @@ describe('结构视图', () => {
     }
   });
 
+  it('堆：节点下方显示数组下标，且跟随 0 基/1 基开关', () => {
+    const data = [97, 76, 65, 49];
+    const host = document.createElement('div');
+    const view = createStructureView();
+    view.mount(host, { data, algorithmId: 'heap' });
+    const steps = [markStep('heap', [0, 1, 2, 3], 6, '建堆', [0, 3])];
+    view.render(replay(data, steps, 1), { data, algorithmId: 'heap' });
+    expect([...host.querySelectorAll('.heap-idx')].map((n) => n.textContent)).toEqual(['0', '1', '2', '3']);
+    view.render(replay(data, steps, 1), { data, algorithmId: 'heap', indexBase: 1 });
+    expect([...host.querySelectorAll('.heap-idx')].map((n) => n.textContent)).toEqual(['1', '2', '3', '4']);
+    // 下标必须是独立元素，数量与节点一致（节点自身 overflow:hidden 会裁掉 ::after）
+    expect(host.querySelectorAll('.heap-idx')).toHaveLength(host.querySelectorAll('.heap-node').length);
+  });
+
   it('堆：换出的元素不再渲染（只剩堆区内的节点与连线）', () => {
     const data = [97, 76, 65, 49, 49, 13, 27, 38];
     const host = document.createElement('div');

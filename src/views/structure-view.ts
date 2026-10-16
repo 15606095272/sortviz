@@ -1,6 +1,7 @@
 import type { ViewContext, ViewModule } from '../core/registry';
 import type { ViewState } from '../core/replay';
 import { COPY } from '../copy/zh';
+import { formatIndex, type IndexBase } from '../core/index-base';
 
 export function createStructureView(): ViewModule {
   let host: HTMLElement | null = null;
@@ -15,7 +16,7 @@ export function createStructureView(): ViewModule {
     if (!host) return;
     host.innerHTML = '';
 
-    if (state.heapSize !== null) { renderHeap(host, state); return; }
+    if (state.heapSize !== null) { renderHeap(host, state, ctx.indexBase ?? 0); return; }
     if (state.callStack.length > 0) { renderRecursionTree(host, state); return; }
     // 希尔排序：显示当前增量下的分组（组内做插入排序），比等有序区形成更能说明问题
     const gap = state.vars['gap'];
@@ -84,7 +85,7 @@ export function createStructureView(): ViewModule {
     };
   }
 
-  function renderHeap(root: HTMLElement, state: ViewState): void {
+  function renderHeap(root: HTMLElement, state: ViewState, indexBase: IndexBase = 0): void {
     const size = state.heapSize ?? state.data.length - 1;
     const count = Math.max(0, Math.min(size + 1, state.data.length));
     if (count === 0) return;
@@ -131,6 +132,15 @@ export function createStructureView(): ViewModule {
       node.style.top = `${g.top}px`;
       node.textContent = String(state.data[i]);
       tree.append(node);
+
+      // 下标标签做成独立元素挂在节点下方：节点本身有 overflow:hidden（防长数字溢出），
+      // 用 ::after 画会被裁掉；同时下标要跟随 0 基/1 基开关，所以由这里按 formatIndex 渲染。
+      const label = document.createElement('span');
+      label.className = 'heap-idx';
+      label.textContent = String(formatIndex(i, indexBase));
+      label.style.left = `${g.pct}%`;
+      label.style.top = `${g.top + HEAP_NODE_H}px`;
+      tree.append(label);
     }
     root.append(tree);
 

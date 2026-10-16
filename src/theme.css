@@ -677,12 +677,10 @@ input[type="range"].seek::-moz-range-thumb { opacity: 0; }
   z-index: 1;
 }
 
-.heap-node::after {
-  content: attr(data-index);
+/* 节点下方的数组下标：独立元素（节点有 overflow:hidden，用 ::after 会被裁掉） */
+.heap-idx {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -14px;
+  transform: translateX(-50%);
   text-align: center;
   font-size: 10px;
   font-weight: 400;
