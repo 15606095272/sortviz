@@ -1,6 +1,8 @@
 import type { CodeLine, Complexity } from '../core/registry';
 import type { ViewState } from '../core/replay';
 import type { Stats } from '../core/step';
+import type { CodeBook, CodeLang } from '../core/code';
+import { codeFor } from '../core/code';
 import { COPY } from '../copy/zh';
 import { formatIndex, rewriteIndices, type IndexBase } from '../core/index-base';
 
@@ -47,6 +49,24 @@ export function renderPseudocode(host: HTMLElement, pseudocode: readonly CodeLin
     span.append(num, document.createTextNode(' '.repeat(line.indent * 2) + line.text));
     host.append(span);
   }
+}
+
+/**
+ * 真实代码：每行一个 .ln，行号在 <b> 里（沿用 renderPseudocode 的 DOM 契约：.ln / .ln b / .ln.hl）。
+ * 高亮规则：把 anchor === 当前语义行号的真实行**全部**标 hl —— 一个语义行常对应多行真实代码
+ * （例如 `while (...) {` 与它的 `}` 都算「比较/循环」这一行）。
+ */
+export function renderCode(host: HTMLElement, book: CodeBook, lang: CodeLang, codeLine: number | undefined): void {
+  host.innerHTML = '';
+  codeFor(book, lang).forEach((entry, i) => {
+    const row = document.createElement('span');
+    row.className = 'ln';
+    if (codeLine !== undefined && entry.anchor === codeLine) row.classList.add('hl');
+    const num = document.createElement('b');
+    num.textContent = String(i + 1);        // 展示序号 1..n，与 anchor（语义行号）无关
+    row.append(num, document.createTextNode(entry.text));
+    host.append(row);
+  });
 }
 
 function statChip(label: string, value: string): HTMLElement {

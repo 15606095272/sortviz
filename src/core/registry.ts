@@ -2,6 +2,7 @@ import type { Step } from './step';
 import type { Order } from './order';
 import type { ViewState } from './replay';
 import type { IndexBase } from './index-base';
+import type { CodeBook } from './code';
 
 export type ViewKind = 'array' | 'structure' | 'bar';
 export type AlgorithmCategory = 'insert' | 'swap' | 'select' | 'merge' | 'radix' | 'search' | 'tree';
@@ -23,6 +24,8 @@ export interface AlgorithmModule {
   stable: boolean;
   complexity: Complexity;
   pseudocode: CodeLine[];
+  /** 展示用的真实代码（四语言，按 anchor 与语义行对齐）；未提供时面板回落显示 pseudocode */
+  code?: CodeBook;
   defaultViews: readonly ViewKind[];      // 只读：算法文件里可用 `as const` 而不必强转
   run(data: number[], options?: RunOptions): Step[];
 }

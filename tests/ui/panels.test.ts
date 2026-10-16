@@ -1,11 +1,13 @@
 import {
   renderPseudocode,
+  renderCode,
   renderVars,
   deriveVars,
   renderCounters,
   renderActionNote,
   renderComplexity,
 } from '../../src/ui/panels';
+import type { CodeBook } from '../../src/core/code';
 import { COPY } from '../../src/copy/zh';
 import { replay } from '../../src/core/replay';
 import { listAlgorithms, getAlgorithm, resetRegistry } from '../../src/core/registry';
@@ -136,5 +138,45 @@ describe('动作说明的无障碍标注', () => {
     const layout = createLayout(root);
     expect(layout.noteHost.getAttribute('role')).toBe('group');
     expect(layout.noteHost.getAttribute('aria-live')).toBe('polite');
+  });
+});
+
+describe('真实代码面板', () => {
+  // anchor 4 故意出现在两行上（while 的开括号行 + 循环体）：一个语义行可以对多行真实代码
+  const BOOK: CodeBook = {
+    c: [
+      { text: 'void f(int a[], int n) {' },
+      { text: '    for (int i = 1; i < n; i++) {', anchor: 1 },
+      { text: '        int key = a[i];', anchor: 2 },
+      { text: '        while (j >= 0 && a[j] > key) {', anchor: 4 },
+      { text: '            a[j + 1] = a[j];', anchor: 4 },
+      { text: '        }' },
+    ],
+    cpp: [{ text: 'cpp' }],
+    java: [{ text: 'java' }],
+    python: [{ text: 'python' }],
+  };
+
+  it('renderCode 按 anchor 高亮（含多行命中同一语义行）', () => {
+    const host = document.createElement('div');
+    renderCode(host, BOOK, 'c', 4);
+    expect(host.querySelectorAll('.ln')).toHaveLength(BOOK.c.length);
+    const hl = [...host.querySelectorAll('.ln.hl')];
+    expect(hl).toHaveLength(2);
+    expect(hl[0].textContent).toContain('while (j >= 0 && a[j] > key)');
+    expect(hl[1].textContent).toContain('a[j + 1] = a[j];');
+    // 行号是展示序号 1..n，不是 anchor（anchor 只是语义行号的引用）
+    expect(host.querySelectorAll('.ln b')[0].textContent).toBe('1');
+    expect(host.querySelectorAll('.ln')[3].querySelector('b')!.textContent).toBe('4');
+    // 全文逐行落进宿主，未命中的行不带 hl
+    expect(host.textContent).toContain('void f(int a[], int n) {');
+    expect(host.querySelectorAll('.ln')[0].classList.contains('hl')).toBe(false);
+  });
+
+  it('renderCode 在 codeLine 为 undefined 时不加任何 hl', () => {
+    const host = document.createElement('div');
+    renderCode(host, BOOK, 'c', undefined);
+    expect(host.querySelectorAll('.ln')).toHaveLength(BOOK.c.length);
+    expect(host.querySelectorAll('.ln.hl')).toHaveLength(0);
   });
 });

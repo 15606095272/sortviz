@@ -3,6 +3,7 @@ import { getAlgorithm, type ViewKind } from '../core/registry';
 import type { IndexBase } from '../core/index-base';
 import type { Theme } from '../ui/theme';
 import type { Order } from '../core/order';
+import { CODE_LANGS, type CodeLang } from '../core/code';
 
 export type ParseResult = { ok: true; data: number[] } | { ok: false; message: string };
 
@@ -38,6 +39,7 @@ export interface ControlsHandlers {
   onView(kind: ViewKind): void;               // 主视图切换：数组视图 ↔ 柱状图（结构视图始终保留）
   onTheme(theme: Theme): void;                // 深浅主题：只切 token，不重建视图
   onOrder(order: Order): void;                // 排序方向：升降序切换，装配层会重跑算法
+  onLang(lang: CodeLang): void;               // 代码语言：只换代码面板的文字，装配层只重渲染当前步
 }
 
 export interface Controls {
@@ -49,6 +51,7 @@ export interface Controls {
   setAlgorithm(id: string): void;      // 装配层回灌当前算法，同步 chip 高亮（键盘数字键切算法时用）
   setTheme(theme: Theme): void;        // 装配层回灌当前主题，同步胶囊高亮（与 setView 同风格）
   setOrder(order: Order): void;        // 装配层回灌当前排序方向，同步胶囊高亮（与 setTheme 同风格）
+  setLang(lang: CodeLang): void;       // 装配层回灌当前代码语言，同步胶囊高亮（与 setOrder 同风格）
 }
 
 /** 实物稿里的默认演示数据（数据结构的经典样例序列） */
@@ -257,6 +260,35 @@ export function createControls(host: HTMLElement, handlers: ControlsHandlers): C
   );
   setOrder('asc');
 
+  // —— 代码语言（C / C++ / Java / Python）——
+  // 只换代码面板里展示的实现（四种语言的代码文本就在模块的 code 里，与算法结果无关），
+  // 所以不重跑算法、只重渲染当前步；容器类名 langswitch 与 .chips/.indexbase/.viewswitch/.themeswitch/.orderswitch 分开
+  const langGroup = mk('div', 'ctrlgroup langswitch');
+  const langText: Record<CodeLang, string> = {
+    c: COPY.langC,
+    cpp: COPY.langCpp,
+    java: COPY.langJava,
+    python: COPY.langPython,
+  };
+  const langCaps: { lang: CodeLang; cap: HTMLElement }[] = [];
+  const setLang = (lang: CodeLang): void => {
+    for (const item of langCaps) item.cap.classList.toggle('on', item.lang === lang);
+  };
+  const langCap = (lang: CodeLang): HTMLElement => {
+    const cap = mk('span', 'chip', langText[lang]);
+    cap.dataset.lang = lang;
+    const pick = (): void => {
+      setLang(lang);                   // 本地先亮（与 orderswitch 同风格），装配层随后回灌
+      handlers.onLang(lang);
+    };
+    cap.addEventListener('click', pick);
+    activatable(cap, pick);
+    langCaps.push({ lang, cap });
+    return cap;
+  };
+  langGroup.append(mk('span', 'lab', COPY.langLabel), ...CODE_LANGS.map(langCap));
+  setLang('c');
+
   // —— 主视图（数组视图 / 柱状图）——
   // 只切换左侧主视图，右侧结构视图始终保留；容器类名 viewswitch 与算法 chips(.chips)、
   // 下标进制(.indexbase) 分开，互不影响既有选择器
@@ -365,7 +397,7 @@ export function createControls(host: HTMLElement, handlers: ControlsHandlers): C
   seekInput.addEventListener('input', () => handlers.onSeek(Number(seekInput.value)));
   progress.append(bar, ptext, seekInput);
 
-  host.append(chipRow, mk('span', 'sep'), dataGroup, mk('span', 'sep'), viewGroup, mk('span', 'sep'), indexBaseGroup, mk('span', 'sep'), orderGroup, mk('span', 'sep'), themeGroup, mk('span', 'sep'), transport, progress, errRow);
+  host.append(chipRow, mk('span', 'sep'), dataGroup, mk('span', 'sep'), viewGroup, mk('span', 'sep'), indexBaseGroup, mk('span', 'sep'), orderGroup, mk('span', 'sep'), langGroup, mk('span', 'sep'), themeGroup, mk('span', 'sep'), transport, progress, errRow);
 
   const setProgress = (nextIndex: number, nextTotal: number, speed: number, isPlaying: boolean): void => {
     index = nextIndex;
@@ -386,5 +418,5 @@ export function createControls(host: HTMLElement, handlers: ControlsHandlers): C
 
   const setPass = (text: string): void => { passText.textContent = text; };
 
-  return { setError, setProgress, setPass, setIndexBase, setView, setAlgorithm, setTheme, setOrder };
+  return { setError, setProgress, setPass, setIndexBase, setView, setAlgorithm, setTheme, setOrder, setLang };
 }

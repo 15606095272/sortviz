@@ -9,13 +9,14 @@ import { createStructureView } from './views/structure-view';
 import { createLayout } from './ui/layout';
 import { createControls, type Controls } from './ui/controls';
 import { handleKey } from './ui/keyboard';
-import { renderPseudocode, renderVars, renderCounters, renderActionNote, renderComplexity } from './ui/panels';
+import { renderPseudocode, renderCode, renderVars, renderCounters, renderActionNote, renderComplexity } from './ui/panels';
 import { renderPassTable } from './ui/pass-table';
 import { COPY } from './copy/zh';
 import type { Step } from './core/step';
 import { formatIndex, type IndexBase } from './core/index-base';
 import { applyTheme, loadTheme, saveTheme, type Theme } from './ui/theme';
 import { loadOrder, saveOrder, type Order } from './core/order';
+import { loadLang, saveLang, type CodeLang } from './core/code';
 import { prefersReducedMotion, stepDuration } from './ui/motion';
 
 const MAX_STEPS = 20000;
@@ -23,6 +24,13 @@ const DEFAULT_DATA = [49, 38, 65, 97, 76, 13, 27, 49];
 // 1x 速度下每步毫秒数。240 是 createPlayer 的默认值（此前 main.ts 未传该参数），
 // 这里只是把「隐含默认」显式化，不改默认播放速度。
 const BASE_MS_PER_STEP = 240;
+/** 代码语言的显示名（代码卡标签与语言胶囊共用一份，统一走 COPY） */
+const LANG_TEXT: Record<CodeLang, string> = {
+  c: COPY.langC,
+  cpp: COPY.langCpp,
+  java: COPY.langJava,
+  python: COPY.langPython,
+};
 
 export function mountApp(root: HTMLElement): void {
   // 主题必须先落地再渲染第一帧：否则深色偏好用户会先看到一帧浅色（白闪）。
@@ -43,6 +51,7 @@ export function mountApp(root: HTMLElement): void {
   let indexBase: IndexBase = 0;              // 展示口径：内部一律 0 基，切 1 基只改显示与文案
   let viewKind: ViewKind = 'array';          // 左侧主视图：数组视图 / 柱状图（右侧结构视图始终保留）
   let order: Order = loadOrder(window.localStorage);   // 排序方向：默认升序，偏好存 localStorage
+  let lang: CodeLang = loadLang(window.localStorage);  // 代码面板的展示语言：默认 C，偏好存 localStorage
 
   // 切换主视图时互斥：先销毁两个主视图再挂载当前那个（避免残留 DOM 与事件）
   const mountMainView = (ctx: ViewContext): void => {
@@ -67,10 +76,19 @@ export function mountApp(root: HTMLElement): void {
       .replace('{to}', String(formatIndex(Math.max(data.length - 1, 0), indexBase)));
     layout.structTag.textContent =
       (COPY.structureTag as Record<string, string>)[algorithmId] ?? COPY.structureTagDefault;
-    // 第 0 步还没执行任何一步，state.lastCodeLine 是 0（哨兵值，伪代码里没有第 0 行）。
-    // 此时回落到本算法的第一行伪代码，避免「当前执行行已高亮」的标签下没有任何高亮行。
+    // 第 0 步还没执行任何一步，state.lastCodeLine 是 0（哨兵值，步骤流里没有第 0 行）。
+    // 此时回落到本算法的第一个语义行，避免「当前执行行已高亮」的标签下没有任何高亮行。
     const activeLine = state.lastCodeLine || algo.pseudocode[0]?.line || 0;
-    renderPseudocode(layout.pseudoHost, algo.pseudocode, activeLine);
+    // 已迁移到真实代码的模块渲染四语言代码（高亮按 anchor 命中，可能多行），
+    // 未迁移的模块回落渲染 pseudocode 骨架（保证 9 个模块不迁移也能正常用）
+    if (algo.code) renderCode(layout.pseudoHost, algo.code, lang, activeLine);
+    else renderPseudocode(layout.pseudoHost, algo.pseudocode, activeLine);
+    // 代码卡标题与右上角标签：有真实代码时写「{lang} 代码」；降序时追加提示，
+    // 说清「代码写的是升序写法、当前跑的是降序」（比较符反向即可）——伪代码回落时同样适用
+    layout.pseudoTitle.textContent = algo.code ? COPY.panelCode : COPY.panelPseudo;
+    layout.pseudoTag.textContent =
+      (algo.code ? COPY.codeTag.replace('{lang}', LANG_TEXT[lang]) : COPY.panelPseudoTag) +
+      (order === 'desc' ? ` · ${COPY.codeDescHint}` : '');
     renderVars(layout.varsHost, state, algorithmId, indexBase);
     renderCounters(layout.countersHost, deriveStats(steps, index));
     renderActionNote(layout.noteHost, state.lastNote, indexBase);
@@ -153,6 +171,13 @@ export function mountApp(root: HTMLElement): void {
       controls?.setOrder(order);
       rebuild();
     },
+    // 切代码语言：只换代码面板展示的实现，算法结果不变，所以只重渲染当前步（与 onIndexBase 同风格）
+    onLang: (next) => {
+      lang = next;
+      saveLang(lang, window.localStorage);
+      controls?.setLang(lang);
+      renderAt(player.state.index);
+    },
   });
 
   function rebuild(nextAlgorithmId = algorithmId, nextData = data): void {
@@ -174,6 +199,7 @@ export function mountApp(root: HTMLElement): void {
   controls?.setView(viewKind);
   controls?.setTheme(theme);
   controls?.setOrder(order);
+  controls?.setLang(lang);
 
   // 全局键盘快捷键：空格播放/暂停、←/→ 单步、Shift+←/→ 跳趟、1..9 切算法。
   // handleKey 在输入框内一律返回 false，所以这里放心 preventDefault（也不会吞掉打字）。

@@ -8,6 +8,8 @@ export interface Layout {
   stateTag: HTMLElement;        // 状态卡标题右侧标签（趟次 / 递归深度，动态）
   arrayHost: HTMLElement;       // 左卡「数组视图」的内容区
   structHost: HTMLElement;      // 右卡「结构视图」的内容区
+  pseudoTitle: HTMLElement;     // 伪代码卡标题文字（迁移到真实代码后改成「代码」，未迁移仍是「伪代码」）
+  pseudoTag: HTMLElement;       // 伪代码卡标题右侧标签（「C 代码」/「当前执行行已高亮」）
   pseudoHost: HTMLElement;      // 伪代码卡内容区
   passesHost: HTMLElement;      // 每趟结果卡内容区
   varsHost: HTMLElement;        // 状态卡：变量区
@@ -23,14 +25,19 @@ function el(tag: string, className?: string, text?: string): HTMLElement {
   return node;
 }
 
-/** 卡片标题：左侧文案（来自 COPY）+ 右侧小标签（返回 tag 供装配层动态填内容） */
-function pane(title: string, tight = false, tagText?: string): { card: HTMLElement; tag: HTMLElement } {
+/**
+ * 卡片标题：左侧文案（来自 COPY）+ 右侧小标签（返回 tag 供装配层动态填内容）。
+ * 标题文字单独放一个 span（.ptitle），这样装配层能在保留右侧 tag 的前提下改标题
+ * （例如代码卡从「伪代码」改成「代码」），不必碰 tag 节点。
+ */
+function pane(title: string, tight = false, tagText?: string): { card: HTMLElement; title: HTMLElement; tag: HTMLElement } {
   const card = el('div', tight ? 'card pane tight' : 'card pane');
-  const h2 = el('h2', undefined, title);
+  const h2 = el('h2');
+  const titleEl = el('span', 'ptitle', title);
   const tag = el('span', 'tag', tagText);
-  h2.append(tag);
+  h2.append(titleEl, tag);
   card.append(h2);
-  return { card, tag };
+  return { card, title: titleEl, tag };
 }
 
 /** 数组视图底部的状态图例（与 .cell 的 data-mark 颜色一一对应） */
@@ -120,6 +127,8 @@ export function createLayout(root: HTMLElement): Layout {
     stateTag: statePane.tag,
     arrayHost,
     structHost,
+    pseudoTitle: pseudoPane.title,
+    pseudoTag: pseudoPane.tag,
     pseudoHost,
     passesHost,
     varsHost,

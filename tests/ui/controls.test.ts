@@ -49,6 +49,7 @@ describe('控制条', () => {
       onIndexBase: (base) => calls.push(`indexbase:${base}`),
       onView: (kind) => calls.push(`view:${kind}`),
       onOrder: (order) => calls.push(`order:${order}`),
+      onLang: (lang) => calls.push(`lang:${lang}`),
       onTheme: (theme) => calls.push(`theme:${theme}`),
     });
     return { host, controls, calls, applied };
@@ -142,6 +143,17 @@ describe('控制条', () => {
     expect(calls).toContain('order:desc');
     controls.setOrder('desc');
     expect(caps[1].classList.contains('on')).toBe(true);
+    expect(caps[0].classList.contains('on')).toBe(false);
+  });
+
+  it('语言胶囊在 .langswitch 里，点击回调带 lang', () => {
+    const { host, controls, calls } = setup();
+    const caps = [...host.querySelectorAll('.langswitch .chip')] as HTMLElement[];
+    expect(caps.map((c) => c.textContent)).toEqual([COPY.langC, COPY.langCpp, COPY.langJava, COPY.langPython]);
+    caps[1].click();
+    expect(calls).toContain('lang:cpp');
+    controls.setLang('python');
+    expect(caps[3].classList.contains('on')).toBe(true);
     expect(caps[0].classList.contains('on')).toBe(false);
   });
 });

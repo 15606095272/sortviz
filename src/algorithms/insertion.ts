@@ -1,5 +1,6 @@
 import { assignStep, compareStep, markStep, passEndStep, withVars, type Step } from '../core/step';
 import { more, normalizeOrder, type Order } from '../core/order';
+import type { CodeBook } from '../core/code';
 
 const PSEUDO = [
   { line: 1, indent: 0, text: 'for i = 1 to n-1:' },
@@ -11,6 +12,63 @@ const PSEUDO = [
   { line: 7, indent: 1, text: '  A[j+1] = key' },
 ];
 
+/**
+ * 四语言真实代码。PSEUDO 是「语义行号骨架」，这里的 anchor 指向骨架的行号：
+ * 各语言按自己的括号/缩进习惯换行（Python 甚至少两行），靠 anchor 与语义行对齐，
+ * 所以面板高亮按 anchor 匹配，不看行号。
+ */
+const CODE: CodeBook = {
+  c: [
+    { text: 'void insertionSort(int a[], int n) {' },
+    { text: '    for (int i = 1; i < n; i++) {', anchor: 1 },
+    { text: '        int key = a[i];', anchor: 2 },
+    { text: '        int j = i - 1;', anchor: 3 },
+    { text: '        while (j >= 0 && a[j] > key) {', anchor: 4 },
+    { text: '            a[j + 1] = a[j];', anchor: 5 },
+    { text: '            j--;', anchor: 6 },
+    { text: '        }' },
+    { text: '        a[j + 1] = key;', anchor: 7 },
+    { text: '    }' },
+    { text: '}' },
+  ],
+  cpp: [
+    { text: 'void insertionSort(int a[], int n) {' },
+    { text: '    for (int i = 1; i < n; ++i) {', anchor: 1 },
+    { text: '        int key = a[i];', anchor: 2 },
+    { text: '        int j = i - 1;', anchor: 3 },
+    { text: '        while (j >= 0 && a[j] > key) {', anchor: 4 },
+    { text: '            a[j + 1] = a[j];', anchor: 5 },
+    { text: '            --j;', anchor: 6 },
+    { text: '        }' },
+    { text: '        a[j + 1] = key;', anchor: 7 },
+    { text: '    }' },
+    { text: '}' },
+  ],
+  java: [
+    { text: 'void insertionSort(int[] a) {' },
+    { text: '    for (int i = 1; i < a.length; i++) {', anchor: 1 },
+    { text: '        int key = a[i];', anchor: 2 },
+    { text: '        int j = i - 1;', anchor: 3 },
+    { text: '        while (j >= 0 && a[j] > key) {', anchor: 4 },
+    { text: '            a[j + 1] = a[j];', anchor: 5 },
+    { text: '            j--;', anchor: 6 },
+    { text: '        }' },
+    { text: '        a[j + 1] = key;', anchor: 7 },
+    { text: '    }' },
+    { text: '}' },
+  ],
+  python: [
+    { text: 'def insertion_sort(a):' },
+    { text: '    for i in range(1, len(a)):', anchor: 1 },
+    { text: '        key = a[i]', anchor: 2 },
+    { text: '        j = i - 1', anchor: 3 },
+    { text: '        while j >= 0 and a[j] > key:', anchor: 4 },
+    { text: '            a[j + 1] = a[j]', anchor: 5 },
+    { text: '            j -= 1', anchor: 6 },
+    { text: '        a[j + 1] = key', anchor: 7 },
+  ],
+};
+
 export const insertion = {
   id: 'insertion',
   name: { zh: '直接插入排序', en: 'Insertion Sort' },
@@ -18,6 +76,7 @@ export const insertion = {
   stable: true,
   complexity: { best: 'O(n)', avg: 'O(n²)', worst: 'O(n²)', space: 'O(1)' },
   pseudocode: PSEUDO,
+  code: CODE,
   defaultViews: ['array', 'structure'] as const,
 
   run(input: number[], options?: { order?: Order }): Step[] {
