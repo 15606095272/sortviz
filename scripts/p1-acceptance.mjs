@@ -228,17 +228,21 @@ const codeByLang = {};
 for (const label of ['C', 'C++', 'Java', 'Python']) {
   await js(`(() => { const c = [...document.querySelectorAll('.langswitch .chip')].find(x => x.textContent === '${label}'); if (c) c.click(); return 1 })()`);
   await sleep(200);
-  codeByLang[label] = await js(`document.querySelectorAll('.ln')[1]?.textContent ?? ''`);
+  // 取整块面板文本：不能只比第 2 行——有些行四种语言语法相同（如 if (low < high) {）
+  codeByLang[label] = await js(`[...document.querySelectorAll('.ln')].map((n) => n.textContent).join('\\n')`);
   const hl = await js(`document.querySelectorAll('.ln.hl').length`);
   check(hl >= 1, `${label} 代码有高亮行`, `${hl} 行`);
 }
-console.log(`  C     第2行: ${codeByLang['C']}`);
-console.log(`  C++   第2行: ${codeByLang['C++']}`);
-console.log(`  Java  第2行: ${codeByLang.Java}`);
-console.log(`  Python 第2行: ${codeByLang.Python}`);
-const uniq = new Set(Object.values(codeByLang).map((s) => String(s).trim()));
+for (const [label, text] of Object.entries(codeByLang)) {
+  const first = String(text).split('\\n').slice(0, 3).join(' | ');
+  console.log(`  ${label.padEnd(6)} 前3行: ${first}`);
+}
+const uniq = new Set(Object.values(codeByLang).map((s) => String(s).replace(/\\s+/g, ' ').trim()));
 check(uniq.size === 4, '四种语言的代码文本各不相同', `${uniq.size} 种`);
-check(/void |def |int\[|vector/.test(Object.values(codeByLang).join(' ')), '代码是真实语言写法（含签名）', Object.values(codeByLang)[0]);
+check(/def\s|range\(/.test(String(codeByLang.Python)), 'Python 面板是 Python 写法（def/range）', String(codeByLang.Python).split('\\n')[1]);
+check(/(void|int|bool)\s+\w+Sort|int\[\]|std::vector|\*a/.test(String(codeByLang['C'])), 'C 面板是 C 写法（函数签名/数组）', String(codeByLang['C']).split('\\n')[0]);
+check(/std::vector|std::swap|vector</.test(String(codeByLang['C++'])), 'C++ 面板用 STL', String(codeByLang['C++']).split('\\n')[1]);
+check(/\bint\[\]|\bvoid\b/.test(String(codeByLang.Java)), 'Java 面板是 Java 写法', String(codeByLang.Java).split('\\n')[1]);
 
 await js(`(() => { const c = [...document.querySelectorAll('.orderswitch .chip')].find(x => x.textContent === '降序'); if (c) c.click(); return 1 })()`);
 await sleep(300);
