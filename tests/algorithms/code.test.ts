@@ -1,6 +1,6 @@
 import { registerBuiltinAlgorithms } from '../../src/algorithms';
-import { listAlgorithms } from '../../src/core/registry';
-import { CODE_LANGS, type CodeLangLine } from '../../src/core/code';
+import { listAlgorithms, resetRegistry } from '../../src/core/registry';
+import { CODE_LANGS, codeText, type CodeLangLine } from '../../src/core/code';
 import { INPUT } from '../fixtures/golden';
 
 interface CodeModule {
@@ -70,6 +70,52 @@ describe('真实代码：锚点覆盖', () => {
       const control = mod.pseudocode.filter((l) => /\b(for|while)\b/.test(l.text)).map((l) => l.line);
       const missing = control.filter((n) => !used.has(n));
       expect(missing, `${mod.id} 未覆盖的控制行`).toEqual([]);
+    }
+  });
+});
+
+/** 已经支持「降序代码」的模块（按需求 b 分批迁移：先做 4 个简单模块；其它模块迁移时把 id 加进来） */
+const DIRECTIONAL_MODULES = ['insertion', 'binary-insertion', 'shell', 'bubble'];
+
+const codeModule = (id: string): CodeModule => {
+  const mod = (listAlgorithms() as unknown as CodeModule[]).find((m) => m.id === id);
+  expect(mod, `注册表里没有 ${id}`).toBeDefined();
+  return mod!;
+};
+
+describe('真实代码：随排序方向变化', () => {
+  // 本文件前面已经注册过一次，这里重置后再注册，避免「算法 id 重复」
+  resetRegistry();
+  registerBuiltinAlgorithms();
+
+  it('方向敏感模块的每种语言都至少有一行 descText，且与原文不同（防漏写/防同文）', () => {
+    for (const id of DIRECTIONAL_MODULES) {
+      const mod = codeModule(id);
+      expect(mod.code, `${id} 缺少 code`).toBeDefined();
+      for (const lang of CODE_LANGS) {
+        const lines = mod.code![lang];
+        const overridden = lines.filter((l) => l.descText !== undefined);
+        expect(
+          overridden.length,
+          `${id}/${lang} 一行 descText 都没写：降序代码会静默等于升序（读者被骗）`,
+        ).toBeGreaterThan(0);
+        for (const l of overridden) {
+          expect(l.descText, `${id}/${lang} 的 descText 与原文一模一样，等于没写`).not.toBe(l.text);
+        }
+      }
+    }
+  });
+
+  it('方向敏感模块：降序的代码文本块与升序不同，且升序逐字等于原文', () => {
+    for (const id of DIRECTIONAL_MODULES) {
+      const mod = codeModule(id);
+      for (const lang of CODE_LANGS) {
+        const lines = mod.code![lang];
+        const asc = lines.map((l) => codeText(l, 'asc')).join('\n');
+        const desc = lines.map((l) => codeText(l, 'desc')).join('\n');
+        expect(desc, `${id}/${lang} 降序渲染出的代码与升序完全一样`).not.toBe(asc);
+        expect(asc, `${id}/${lang} 升序文本漂移了`).toBe(lines.map((l) => l.text).join('\n'));
+      }
     }
   });
 });

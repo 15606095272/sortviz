@@ -1,3 +1,5 @@
+import type { Order } from './order';
+
 /** 展示用代码语言：默认 C（与 408 的 C 风格叙述接近） */
 export type CodeLang = 'c' | 'cpp' | 'java' | 'python';
 
@@ -11,6 +13,8 @@ export const LANG_STORAGE_KEY = 'sortviz.lang';
  */
 export interface CodeLangLine {
   text: string;
+  /** 降序时改用的文本（仅"随方向会变"的行需要给）；不给则降序也用 text */
+  descText?: string;
   anchor?: number;
 }
 
@@ -23,6 +27,11 @@ export function normalizeLang(value: string | null | undefined): CodeLang {
 
 export function codeFor(book: CodeBook, lang: CodeLang): readonly CodeLangLine[] {
   return book[lang];
+}
+
+/** 按方向取该行文本：asc 恒用 text；desc 有 descText 就用它 */
+export function codeText(line: CodeLangLine, order: Order): string {
+  return order === 'desc' && line.descText !== undefined ? line.descText : line.text;
 }
 
 export function loadLang(storage?: Pick<Storage, 'getItem'> | null): CodeLang {

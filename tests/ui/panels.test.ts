@@ -148,7 +148,8 @@ describe('真实代码面板', () => {
       { text: 'void f(int a[], int n) {' },
       { text: '    for (int i = 1; i < n; i++) {', anchor: 1 },
       { text: '        int key = a[i];', anchor: 2 },
-      { text: '        while (j >= 0 && a[j] > key) {', anchor: 4 },
+      // 这一行随方向变：降序时比较符反向（descText）
+      { text: '        while (j >= 0 && a[j] > key) {', descText: '        while (j >= 0 && a[j] < key) {', anchor: 4 },
       { text: '            a[j + 1] = a[j];', anchor: 4 },
       { text: '        }' },
     ],
@@ -171,6 +172,30 @@ describe('真实代码面板', () => {
     // 全文逐行落进宿主，未命中的行不带 hl
     expect(host.textContent).toContain('void f(int a[], int n) {');
     expect(host.querySelectorAll('.ln')[0].classList.contains('hl')).toBe(false);
+  });
+
+  it('renderCode 传 desc：命中的行显示 descText', () => {
+    const host = document.createElement('div');
+    renderCode(host, BOOK, 'c', 4, 'desc');
+    const hl = [...host.querySelectorAll('.ln.hl')];
+    expect(hl).toHaveLength(2);
+    expect(hl[0].textContent).toContain('while (j >= 0 && a[j] < key)');
+    expect(host.textContent).not.toContain('a[j] > key');
+    // 没有 descText 的行仍然照抄原文
+    expect(host.textContent).toContain('void f(int a[], int n) {');
+    expect(hl[1].textContent).toContain('a[j + 1] = a[j];');
+  });
+
+  it('renderCode 传 asc（或不传）时显示 text', () => {
+    const asc = document.createElement('div');
+    renderCode(asc, BOOK, 'c', 4, 'asc');
+    const dflt = document.createElement('div');
+    renderCode(dflt, BOOK, 'c', 4);
+    for (const host of [asc, dflt]) {
+      expect(host.textContent).toContain('while (j >= 0 && a[j] > key)');
+      expect(host.textContent).not.toContain('a[j] < key');
+    }
+    expect(asc.textContent).toBe(dflt.textContent);
   });
 
   it('renderCode 在 codeLine 为 undefined 时不加任何 hl', () => {

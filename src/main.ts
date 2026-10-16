@@ -81,14 +81,14 @@ export function mountApp(root: HTMLElement): void {
     const activeLine = state.lastCodeLine || algo.pseudocode[0]?.line || 0;
     // 已迁移到真实代码的模块渲染四语言代码（高亮按 anchor 命中，可能多行），
     // 未迁移的模块回落渲染 pseudocode 骨架（保证 9 个模块不迁移也能正常用）
-    if (algo.code) renderCode(layout.pseudoHost, algo.code, lang, activeLine);
+    if (algo.code) renderCode(layout.pseudoHost, algo.code, lang, activeLine, order);
     else renderPseudocode(layout.pseudoHost, algo.pseudocode, activeLine);
-    // 代码卡标题与右上角标签：有真实代码时写「{lang} 代码」；降序时追加提示，
-    // 说清「代码写的是升序写法、当前跑的是降序」（比较符反向即可）——伪代码回落时同样适用
+    // 代码卡标题与右上角标签：有真实代码时写「{lang} 代码」，降序再拼上「· 降序」——
+    // 面板里的代码本身已随方向切换（行级 descText 覆盖），所以不再需要「请自行反相比较符」这类提示
     layout.pseudoTitle.textContent = algo.code ? COPY.panelCode : COPY.panelPseudo;
-    layout.pseudoTag.textContent =
-      (algo.code ? COPY.codeTag.replace('{lang}', LANG_TEXT[lang]) : COPY.panelPseudoTag) +
-      (order === 'desc' ? ` · ${COPY.codeDescHint}` : '');
+    layout.pseudoTag.textContent = algo.code
+      ? COPY.codeTag.replace('{lang}', LANG_TEXT[lang]) + (order === 'desc' ? ` · ${COPY.orderDesc}` : '')
+      : COPY.panelPseudoTag;
     renderVars(layout.varsHost, state, algorithmId, indexBase);
     renderCounters(layout.countersHost, deriveStats(steps, index));
     renderActionNote(layout.noteHost, state.lastNote, indexBase);

@@ -66,8 +66,7 @@ export const COPY = {
   langJava: 'Java',
   langPython: 'Python',
   panelCode: '代码',                             // 迁移到真实代码后代码卡的标题（伪代码标题 panelPseudo 仍作回落）
-  codeTag: '{lang} 代码',                       // 伪代码卡右上角标签（替换原来的「当前执行行已高亮」）
-  codeDescHint: '当前为降序：把代码里的比较符反向即可（例：a[j] > key 改成 a[j] < key）',
+  codeTag: '{lang} 代码',                       // 代码卡右上角标签（降序时再拼上「· 降序」）
   structureTagDefault: '结构变化',
   structureTag: {
     insertion: '插入 → 有序区扩张',
