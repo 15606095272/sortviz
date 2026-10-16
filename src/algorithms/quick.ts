@@ -132,6 +132,7 @@ export const quick = {
       const pivot = a[low];
       let i = low;
       steps.push(markStep('pivot', [low], 7, `pivot = ${pivot}（取区间第一个元素）`));
+      steps.push(noteStep(`扫描 a[${low + 1}..${high}]：a[j] ${lt} pivot 的元素换到前面`, 8));
       for (let j = low + 1; j <= high; j++) {
         steps.push(withVars(compareStep(j, low, 9, `比较 a[${j}]=${a[j]} 与 pivot=${pivot}`), { i, j, low, high, pivot }));
         if (less(a[j], pivot, order)) {

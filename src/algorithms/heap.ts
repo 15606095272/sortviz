@@ -160,6 +160,7 @@ export const heap = {
     // 下沉：先取「更靠前」的孩子，父若已就位就停（王道 BuildMaxHeap 口径；降序时即小顶堆口径）
     const pushDown = (root: number, end: number): void => {
       let parent = root;
+      steps.push(noteStep(`下沉 a[${parent}]：2*${parent}+1 ≤ ${end} 时继续与更靠前的孩子比较`, 8));
       while (2 * parent + 1 <= end) {
         let child = 2 * parent + 1;
         if (child + 1 <= end) {
@@ -183,6 +184,7 @@ export const heap = {
     steps.push(noteStep('建初堆完成', 2));
 
     for (let heapSize = n - 1; heapSize >= 1; heapSize--) {
+      steps.push(noteStep(`第 ${n - heapSize} 趟开始：当前堆范围 a[0..${heapSize}]`, 4));
       [a[0], a[heapSize]] = [a[heapSize], a[0]];
       steps.push(withVars(swapStep(0, heapSize, 5, `堆顶（${extreme}）换到末尾 a[${heapSize}]`), { heapSize }));
       steps.push(markStep('sorted', [heapSize], 5, `a[${heapSize}]=${a[heapSize]} 就位`));

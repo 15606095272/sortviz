@@ -97,6 +97,7 @@ export const selection = {
       let minIndex = i;
       // 'pivot' 标记在这里表示「当前最小候选」——数组视图会把它画成紫色基准格
       steps.push(markStep('pivot', [minIndex], 2, `第 ${i + 1} 趟：先假定 a[${i}]=${a[i]} 是剩余部分的${best}值`));
+      steps.push(noteStep(`在 a[${i + 1}..${n - 1}] 内扫描，随时更新${best}值的下标`, 3));
       for (let j = i + 1; j < n; j++) {
         steps.push(withVars(compareStep(j, minIndex, 4, `比较 a[${j}]=${a[j]} 与当前最值 a[${minIndex}]=${a[minIndex]}`), { i, j, minIndex }));
         if (less(a[j], a[minIndex], order)) {

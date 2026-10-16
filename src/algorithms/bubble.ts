@@ -95,6 +95,7 @@ export const bubble = {
     for (let i = 0; i < n - 1; i++) {
       const end = n - 1 - i;
       let swapped = false;
+      steps.push(noteStep(`第 ${i + 1} 趟：相邻比较 a[0..${end}]，把${which}的往右冒到 a[${end}]`, 3));
       for (let j = 0; j < end; j++) {
         steps.push(withVars(compareStep(j, j + 1, 4, `比较 a[${j}]=${a[j]} 与 a[${j + 1}]=${a[j + 1]}`), { i, j }));
         if (more(a[j], a[j + 1], order)) {

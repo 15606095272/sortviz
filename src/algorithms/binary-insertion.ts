@@ -115,6 +115,7 @@ export const binaryInsertion = {
       steps.push(markStep('active', [i], 2, `取出 a[${i}]=${key} 作为待插入的 key`));
       let low = 0;
       let high = i - 1;
+      steps.push(noteStep(`在有序区 a[0..${high}] 内折半查找 key=${key} 的插入位置`, 4));
       while (low <= high) {
         const mid = (low + high) >> 1;
         // 下标 i 是空位（key 已取出），比较对象始终是 key，故说明里写 key

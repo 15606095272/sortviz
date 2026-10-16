@@ -1,4 +1,4 @@
-import { assignStep, compareStep, markStep, passEndStep, withVars, type Step } from '../core/step';
+import { assignStep, compareStep, markStep, noteStep, passEndStep, withVars, type Step } from '../core/step';
 import { more, normalizeOrder, type Order } from '../core/order';
 import type { CodeBook } from '../core/code';
 
@@ -95,6 +95,7 @@ export const shell = {
     for (let d = n >> 1; d >= 1; d = d >> 1) gaps.push(d);
 
     for (const gap of gaps) {
+      steps.push(noteStep(`步长 ${gap}：间隔 ${gap} 的元素各成一组，组内做插入排序`, 2));
       for (let k = gap; k < n; k++) {
         const key = a[k];
         // 取出 key 不计移动，只做高亮

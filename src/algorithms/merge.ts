@@ -1,4 +1,4 @@
-import { assignStep, auxWriteStep, compareStep, markStep, passEndStep, unmarkStep, withVars, type Step } from '../core/step';
+import { assignStep, auxWriteStep, compareStep, markStep, noteStep, passEndStep, unmarkStep, withVars, type Step } from '../core/step';
 import { more, normalizeOrder, type Order } from '../core/order';
 import type { CodeBook } from '../core/code';
 
@@ -181,6 +181,7 @@ export const merge = {
     // 闭包直接引用不到（会 ReferenceError），但变量值要带进步骤截图，故显式传入。
     const mergeRun = (lo: number, mid: number, hi: number, width: number): void => {
       steps.push(markStep('range', span(lo, hi), 4, `归并 [${lo}, ${mid}] 与 [${mid + 1}, ${hi}]`, [lo, hi]));
+      steps.push(noteStep(`双指针归并：i ≤ ${mid} 且 j ≤ ${hi} 时，每次把${le}的一侧写入 aux`, 8));
       let i = lo;
       let j = mid + 1;
       let k = lo;

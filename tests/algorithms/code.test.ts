@@ -59,4 +59,17 @@ describe('真实代码：锚点覆盖', () => {
     const anchors = new Set(code!.c.map((l) => l.anchor).filter((n): n is number => typeof n === 'number'));
     expect([...anchors].sort((a, b) => a - b)).toEqual([1, 2, 3, 4, 5, 6, 7]);
   });
+
+  it('控制行都被高亮覆盖：伪代码里每个 for/while 行都至少被某一步的 codeLine 引用', () => {
+    for (const mod of listAlgorithms()) {
+      const used = new Set(
+        (mod.run(INPUT) as Array<{ codeLine?: number }>)
+          .map((s) => s.codeLine)
+          .filter((n): n is number => typeof n === 'number'),
+      );
+      const control = mod.pseudocode.filter((l) => /\b(for|while)\b/.test(l.text)).map((l) => l.line);
+      const missing = control.filter((n) => !used.has(n));
+      expect(missing, `${mod.id} 未覆盖的控制行`).toEqual([]);
+    }
+  });
 });
