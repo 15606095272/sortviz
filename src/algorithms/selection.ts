@@ -1,5 +1,6 @@
 import { compareStep, markStep, noteStep, passEndStep, swapStep, unmarkStep, withVars, type Step } from '../core/step';
 import { less, normalizeOrder, type Order } from '../core/order';
+import type { CodeBook } from '../core/code';
 
 const PSEUDO = [
   { line: 1, indent: 0, text: 'for i = 0 to n-2:' },
@@ -9,6 +10,70 @@ const PSEUDO = [
   { line: 5, indent: 1, text: '  if minIndex != i: swap(A[i], A[minIndex])' },
 ];
 
+const CODE: CodeBook = {
+  c: [
+    { text: 'void selectionSort(int a[], int n) {' },
+    { text: '    for (int i = 0; i < n - 1; i++) {', anchor: 1 },
+    { text: '        int minIndex = i;', anchor: 2 },
+    { text: '        for (int j = i + 1; j < n; j++) {', anchor: 3 },
+    { text: '            if (a[j] < a[minIndex]) {', anchor: 4 },
+    { text: '                minIndex = j;', anchor: 4 },
+    { text: '            }' },
+    { text: '        }' },
+    { text: '        if (minIndex != i) {', anchor: 5 },
+    { text: '            int t = a[i];', anchor: 5 },
+    { text: '            a[i] = a[minIndex];', anchor: 5 },
+    { text: '            a[minIndex] = t;', anchor: 5 },
+    { text: '        }' },
+    { text: '    }' },
+    { text: '}' },
+  ],
+  cpp: [
+    { text: 'void selectionSort(std::vector<int>& a) {' },
+    { text: '    int n = a.size();' },
+    { text: '    for (int i = 0; i < n - 1; ++i) {', anchor: 1 },
+    { text: '        int minIndex = i;', anchor: 2 },
+    { text: '        for (int j = i + 1; j < n; ++j) {', anchor: 3 },
+    { text: '            if (a[j] < a[minIndex]) {', anchor: 4 },
+    { text: '                minIndex = j;', anchor: 4 },
+    { text: '            }' },
+    { text: '        }' },
+    { text: '        if (minIndex != i) {', anchor: 5 },
+    { text: '            std::swap(a[i], a[minIndex]);', anchor: 5 },
+    { text: '        }' },
+    { text: '    }' },
+    { text: '}' },
+  ],
+  java: [
+    { text: 'void selectionSort(int[] a) {' },
+    { text: '    for (int i = 0; i < a.length - 1; i++) {', anchor: 1 },
+    { text: '        int minIndex = i;', anchor: 2 },
+    { text: '        for (int j = i + 1; j < a.length; j++) {', anchor: 3 },
+    { text: '            if (a[j] < a[minIndex]) {', anchor: 4 },
+    { text: '                minIndex = j;', anchor: 4 },
+    { text: '            }' },
+    { text: '        }' },
+    { text: '        if (minIndex != i) {', anchor: 5 },
+    { text: '            int t = a[i];', anchor: 5 },
+    { text: '            a[i] = a[minIndex];', anchor: 5 },
+    { text: '            a[minIndex] = t;', anchor: 5 },
+    { text: '        }' },
+    { text: '    }' },
+    { text: '}' },
+  ],
+  python: [
+    { text: 'def selection_sort(a):' },
+    { text: '    n = len(a)' },
+    { text: '    for i in range(n - 1):', anchor: 1 },
+    { text: '        min_index = i', anchor: 2 },
+    { text: '        for j in range(i + 1, n):', anchor: 3 },
+    { text: '            if a[j] < a[min_index]:', anchor: 4 },
+    { text: '                min_index = j', anchor: 4 },
+    { text: '        if min_index != i:', anchor: 5 },
+    { text: '            a[i], a[min_index] = a[min_index], a[i]', anchor: 5 },
+  ],
+};
+
 export const selection = {
   id: 'selection',
   name: { zh: '简单选择排序', en: 'Selection Sort' },
@@ -16,6 +81,7 @@ export const selection = {
   stable: false,
   complexity: { best: 'O(n²)', avg: 'O(n²)', worst: 'O(n²)', space: 'O(1)' },
   pseudocode: PSEUDO,
+  code: CODE,
   defaultViews: ['array', 'structure'] as const,
 
   run(input: number[], options?: { order?: Order }): Step[] {

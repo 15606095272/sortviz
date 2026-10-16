@@ -1,5 +1,6 @@
 import { compareStep, markStep, noteStep, passEndStep, unmarkStep, withVars, type Step } from '../core/step';
 import { less, normalizeOrder, type Order } from '../core/order';
+import type { CodeBook } from '../core/code';
 
 const PSEUDO = [
   { line: 1, indent: 0, text: 'BinarySearch(A, target):' },
@@ -12,6 +13,74 @@ const PSEUDO = [
   { line: 8, indent: 1, text: '  return -1            // 查找失败' },
 ];
 
+const CODE: CodeBook = {
+  c: [
+    { text: 'int binarySearch(int a[], int n, int target) {', anchor: 1 },
+    { text: '    int low = 0;', anchor: 2 },
+    { text: '    int high = n - 1;', anchor: 2 },
+    { text: '    while (low <= high) {', anchor: 3 },
+    { text: '        int mid = (low + high) / 2;', anchor: 4 },
+    { text: '        if (a[mid] == target) {', anchor: 5 },
+    { text: '            return mid;', anchor: 5 },
+    { text: '        } else if (a[mid] < target) {', anchor: 6 },
+    { text: '            low = mid + 1;', anchor: 6 },
+    { text: '        } else {', anchor: 7 },
+    { text: '            high = mid - 1;', anchor: 7 },
+    { text: '        }' },
+    { text: '    }' },
+    { text: '    return -1;', anchor: 8 },
+    { text: '}' },
+  ],
+  cpp: [
+    { text: 'int binarySearch(const std::vector<int>& a, int target) {', anchor: 1 },
+    { text: '    int low = 0;', anchor: 2 },
+    { text: '    int high = static_cast<int>(a.size()) - 1;', anchor: 2 },
+    { text: '    while (low <= high) {', anchor: 3 },
+    { text: '        int mid = low + (high - low) / 2;', anchor: 4 },
+    { text: '        if (a[mid] == target) {', anchor: 5 },
+    { text: '            return mid;', anchor: 5 },
+    { text: '        } else if (a[mid] < target) {', anchor: 6 },
+    { text: '            low = mid + 1;', anchor: 6 },
+    { text: '        } else {', anchor: 7 },
+    { text: '            high = mid - 1;', anchor: 7 },
+    { text: '        }' },
+    { text: '    }' },
+    { text: '    return -1;', anchor: 8 },
+    { text: '}' },
+  ],
+  java: [
+    { text: 'int binarySearch(int[] a, int target) {', anchor: 1 },
+    { text: '    int low = 0;', anchor: 2 },
+    { text: '    int high = a.length - 1;', anchor: 2 },
+    { text: '    while (low <= high) {', anchor: 3 },
+    { text: '        int mid = (low + high) / 2;', anchor: 4 },
+    { text: '        if (a[mid] == target) {', anchor: 5 },
+    { text: '            return mid;', anchor: 5 },
+    { text: '        } else if (a[mid] < target) {', anchor: 6 },
+    { text: '            low = mid + 1;', anchor: 6 },
+    { text: '        } else {', anchor: 7 },
+    { text: '            high = mid - 1;', anchor: 7 },
+    { text: '        }' },
+    { text: '    }' },
+    { text: '    return -1;', anchor: 8 },
+    { text: '}' },
+  ],
+  python: [
+    { text: 'def binary_search(a, target):', anchor: 1 },
+    { text: '    low = 0', anchor: 2 },
+    { text: '    high = len(a) - 1', anchor: 2 },
+    { text: '    while low <= high:', anchor: 3 },
+    { text: '        mid = (low + high) // 2', anchor: 4 },
+    { text: '        if a[mid] == target:', anchor: 5 },
+    { text: '            return mid', anchor: 5 },
+    { text: '        elif a[mid] < target:', anchor: 6 },
+    { text: '            low = mid + 1', anchor: 6 },
+    { text: '        else:', anchor: 7 },
+    { text: '            high = mid - 1', anchor: 7 },
+    { text: '    return -1', anchor: 8 },
+  ],
+};
+
 export const binarySearch = {
   id: 'binary-search',
   name: { zh: '折半查找', en: 'Binary Search' },
@@ -19,6 +88,7 @@ export const binarySearch = {
   stable: true, // 查找不改变元素相对次序
   complexity: { best: 'O(1)', avg: 'O(log n)', worst: 'O(log n)', space: 'O(1)' },
   pseudocode: PSEUDO,
+  code: CODE,
   defaultViews: ['array'] as const,
 
   /** 在「界面显示的那份数据」上直接查找（不排序副本，否则高亮下标会错位）。

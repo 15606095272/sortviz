@@ -1,9 +1,16 @@
 import { registerBuiltinAlgorithms } from '../../src/algorithms';
 import { listAlgorithms } from '../../src/core/registry';
-import { CODE_LANGS } from '../../src/core/code';
+import { CODE_LANGS, type CodeLangLine } from '../../src/core/code';
 import { INPUT } from '../fixtures/golden';
 
-const usedCodeLines = (mod: { run: (i: number[]) => unknown[] }): number[] => {
+interface CodeModule {
+  id: string;
+  pseudocode: readonly unknown[];
+  code?: Record<string, readonly CodeLangLine[]>;
+  run: (i: number[]) => unknown[];
+}
+
+const usedCodeLines = (mod: CodeModule): number[] => {
   const lines = (mod.run(INPUT) as Array<{ codeLine?: number }>)
     .map((s) => s.codeLine)
     .filter((n): n is number => typeof n === 'number');
@@ -13,16 +20,34 @@ const usedCodeLines = (mod: { run: (i: number[]) => unknown[] }): number[] => {
 describe('真实代码：锚点覆盖', () => {
   registerBuiltinAlgorithms();
 
-  it('已迁移（有 code）的模块：每种语言都覆盖步骤用到的全部语义行', () => {
-    for (const mod of listAlgorithms()) {
-      const code = (mod as { code?: Record<string, Array<{ text: string; anchor?: number }>> }).code;
-      if (!code) continue; // 未迁移的模块回落到伪代码，C2 会补齐
-      const used = usedCodeLines(mod as { run: (i: number[]) => unknown[] });
+  it('所有模块都已迁移：每种语言覆盖全部语义行', () => {
+    for (const mod of listAlgorithms() as unknown as CodeModule[]) {
+      const code = mod.code;
+      // C2 收口：不再允许「没有 code 就跳过」，缺 code 直接失败并报出模块 id
+      expect(code, `${mod.id} 缺少 code：所有模块都必须有四语言真实代码`).toBeDefined();
+
+      const used = usedCodeLines(mod);
       for (const lang of CODE_LANGS) {
-        const anchors = new Set(code[lang].map((l) => l.anchor).filter((n): n is number => typeof n === 'number'));
+        const lines = code![lang];
+        expect(lines.length, `${mod.id}/${lang} 行数太少`).toBeGreaterThanOrEqual(5);
+
+        // 该语言覆盖步骤流用到的全部 codeLine
+        const anchors = new Set(lines.map((l) => l.anchor).filter((n): n is number => typeof n === 'number'));
         const missing = used.filter((n) => !anchors.has(n));
         expect(missing, `${mod.id}/${lang} 缺锚点`).toEqual([]);
-        expect(code[lang].length, `${mod.id}/${lang} 不能只有空行`).toBeGreaterThan(0);
+
+        for (const line of lines) {
+          // anchor 必须落在 1..pseudocode.length（越界 = 手滑写错行号）
+          if (line.anchor !== undefined) {
+            expect(line.anchor, `${mod.id}/${lang} anchor 越界`).toBeGreaterThanOrEqual(1);
+            expect(line.anchor, `${mod.id}/${lang} anchor 越界`).toBeLessThanOrEqual(mod.pseudocode.length);
+          }
+          // 空串只允许出现在「纯分隔空行」上（无 anchor，形如 { text: '' }）；
+          // 任何带 anchor 的语义行都必须是真实代码文本，只含空白的行一律不许。
+          if (line.text === '' && line.anchor === undefined) continue;
+          expect(line.text.trim(), `${mod.id}/${lang} 出现空行/空白行`).not.toBe('');
+          expect(line.text, `${mod.id}/${lang} 出现 TODO`).not.toContain('TODO');
+        }
       }
     }
   });
