@@ -1,5 +1,6 @@
 import { assignStep, compareStep, markStep, passEndStep, withVars, type Step } from '../core/step';
 import { more, normalizeOrder, type Order } from '../core/order';
+import type { CodeBook } from '../core/code';
 
 const PSEUDO = [
   { line: 1, indent: 0, text: 'for d = n/2; d >= 1; d = d/2:' },
@@ -9,6 +10,69 @@ const PSEUDO = [
   { line: 5, indent: 3, text: '      A[j+d] = A[j];  j = j - d' },
   { line: 6, indent: 2, text: '    A[j+d] = key' },
 ];
+const CODE: CodeBook = {
+  c: [
+    { text: 'void shellSort(int a[], int n) {' },
+    { text: '    for (int gap = n / 2; gap > 0; gap /= 2) {', anchor: 1 },
+    { text: '        for (int k = gap; k < n; k++) {', anchor: 2 },
+    { text: '            int key = a[k];', anchor: 3 },
+    { text: '            int j = k - gap;', anchor: 3 },
+    { text: '            while (j >= 0 && a[j] > key) {', anchor: 4 },
+    { text: '                a[j + gap] = a[j];', anchor: 5 },
+    { text: '                j -= gap;', anchor: 5 },
+    { text: '            }' },
+    { text: '            a[j + gap] = key;', anchor: 6 },
+    { text: '        }' },
+    { text: '    }' },
+    { text: '}' },
+  ],
+  cpp: [
+    { text: 'void shellSort(std::vector<int>& a) {' },
+    { text: '    int n = static_cast<int>(a.size());' },
+    { text: '    for (int gap = n / 2; gap > 0; gap /= 2) {', anchor: 1 },
+    { text: '        for (int k = gap; k < n; ++k) {', anchor: 2 },
+    { text: '            int key = a[k];', anchor: 3 },
+    { text: '            int j = k - gap;', anchor: 3 },
+    { text: '            while (j >= 0 && a[j] > key) {', anchor: 4 },
+    { text: '                a[j + gap] = a[j];', anchor: 5 },
+    { text: '                j -= gap;', anchor: 5 },
+    { text: '            }' },
+    { text: '            a[j + gap] = key;', anchor: 6 },
+    { text: '        }' },
+    { text: '    }' },
+    { text: '}' },
+  ],
+  java: [
+    { text: 'void shellSort(int[] a) {' },
+    { text: '    int n = a.length;' },
+    { text: '    for (int gap = n / 2; gap > 0; gap /= 2) {', anchor: 1 },
+    { text: '        for (int k = gap; k < n; k++) {', anchor: 2 },
+    { text: '            int key = a[k];', anchor: 3 },
+    { text: '            int j = k - gap;', anchor: 3 },
+    { text: '            while (j >= 0 && a[j] > key) {', anchor: 4 },
+    { text: '                a[j + gap] = a[j];', anchor: 5 },
+    { text: '                j -= gap;', anchor: 5 },
+    { text: '            }' },
+    { text: '            a[j + gap] = key;', anchor: 6 },
+    { text: '        }' },
+    { text: '    }' },
+    { text: '}' },
+  ],
+  python: [
+    { text: 'def shell_sort(a):' },
+    { text: '    n = len(a)' },
+    { text: '    gap = n // 2' },
+    { text: '    while gap > 0:', anchor: 1 },
+    { text: '        for k in range(gap, n):', anchor: 2 },
+    { text: '            key = a[k]', anchor: 3 },
+    { text: '            j = k - gap', anchor: 3 },
+    { text: '            while j >= 0 and a[j] > key:', anchor: 4 },
+    { text: '                a[j + gap] = a[j]', anchor: 5 },
+    { text: '                j -= gap', anchor: 5 },
+    { text: '            a[j + gap] = key', anchor: 6 },
+    { text: '        gap //= 2', anchor: 1 },
+  ],
+};
 
 export const shell = {
   id: 'shell',
@@ -17,6 +81,7 @@ export const shell = {
   stable: false,
   complexity: { best: 'O(n log n)', avg: 'O(n^1.3)', worst: 'O(n²)', space: 'O(1)' },
   pseudocode: PSEUDO,
+  code: CODE,
   defaultViews: ['array', 'structure'] as const,
 
   run(input: number[], options?: { order?: Order }): Step[] {

@@ -1,5 +1,6 @@
 import { compareStep, markStep, noteStep, passEndStep, swapStep, withVars, type Step } from '../core/step';
 import { more, normalizeOrder, type Order } from '../core/order';
+import type { CodeBook } from '../core/code';
 
 const PSEUDO = [
   { line: 1, indent: 0, text: 'for i = 0 to n-2:' },
@@ -9,6 +10,68 @@ const PSEUDO = [
   { line: 5, indent: 3, text: '      swap(A[j], A[j+1]);  swapped = true' },
   { line: 6, indent: 1, text: '  if not swapped: break' },
 ];
+const CODE: CodeBook = {
+  c: [
+    { text: 'void bubbleSort(int a[], int n) {' },
+    { text: '    for (int i = 0; i < n - 1; i++) {', anchor: 1 },
+    { text: '        int swapped = 0;', anchor: 2 },
+    { text: '        for (int j = 0; j < n - 1 - i; j++) {', anchor: 3 },
+    { text: '            if (a[j] > a[j + 1]) {', anchor: 4 },
+    { text: '                int t = a[j];', anchor: 5 },
+    { text: '                a[j] = a[j + 1];', anchor: 5 },
+    { text: '                a[j + 1] = t;', anchor: 5 },
+    { text: '                swapped = 1;', anchor: 5 },
+    { text: '            }' },
+    { text: '        }' },
+    { text: '        if (!swapped) break;', anchor: 6 },
+    { text: '    }' },
+    { text: '}' },
+  ],
+  cpp: [
+    { text: 'void bubbleSort(std::vector<int>& a) {' },
+    { text: '    int n = static_cast<int>(a.size());' },
+    { text: '    for (int i = 0; i < n - 1; ++i) {', anchor: 1 },
+    { text: '        bool swapped = false;', anchor: 2 },
+    { text: '        for (int j = 0; j < n - 1 - i; ++j) {', anchor: 3 },
+    { text: '            if (a[j] > a[j + 1]) {', anchor: 4 },
+    { text: '                std::swap(a[j], a[j + 1]);', anchor: 5 },
+    { text: '                swapped = true;', anchor: 5 },
+    { text: '            }' },
+    { text: '        }' },
+    { text: '        if (!swapped) break;', anchor: 6 },
+    { text: '    }' },
+    { text: '}' },
+  ],
+  java: [
+    { text: 'void bubbleSort(int[] a) {' },
+    { text: '    int n = a.length;' },
+    { text: '    for (int i = 0; i < n - 1; i++) {', anchor: 1 },
+    { text: '        boolean swapped = false;', anchor: 2 },
+    { text: '        for (int j = 0; j < n - 1 - i; j++) {', anchor: 3 },
+    { text: '            if (a[j] > a[j + 1]) {', anchor: 4 },
+    { text: '                int t = a[j];', anchor: 5 },
+    { text: '                a[j] = a[j + 1];', anchor: 5 },
+    { text: '                a[j + 1] = t;', anchor: 5 },
+    { text: '                swapped = true;', anchor: 5 },
+    { text: '            }' },
+    { text: '        }' },
+    { text: '        if (!swapped) break;', anchor: 6 },
+    { text: '    }' },
+    { text: '}' },
+  ],
+  python: [
+    { text: 'def bubble_sort(a):' },
+    { text: '    n = len(a)' },
+    { text: '    for i in range(n - 1):', anchor: 1 },
+    { text: '        swapped = False', anchor: 2 },
+    { text: '        for j in range(n - 1 - i):', anchor: 3 },
+    { text: '            if a[j] > a[j + 1]:', anchor: 4 },
+    { text: '                a[j], a[j + 1] = a[j + 1], a[j]', anchor: 5 },
+    { text: '                swapped = True', anchor: 5 },
+    { text: '        if not swapped:', anchor: 6 },
+    { text: '            break', anchor: 6 },
+  ],
+};
 
 export const bubble = {
   id: 'bubble',
@@ -17,6 +80,7 @@ export const bubble = {
   stable: true,
   complexity: { best: 'O(n)', avg: 'O(n²)', worst: 'O(n²)', space: 'O(1)' },
   pseudocode: PSEUDO,
+  code: CODE,
   defaultViews: ['array', 'structure'] as const,
 
   run(input: number[], options?: { order?: Order }): Step[] {

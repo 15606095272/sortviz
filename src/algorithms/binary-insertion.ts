@@ -1,5 +1,6 @@
 import { assignStep, compareStep, markStep, noteStep, passEndStep, withVars, type Step } from '../core/step';
 import { more, normalizeOrder, type Order } from '../core/order';
+import type { CodeBook } from '../core/code';
 
 const PSEUDO = [
   { line: 1, indent: 0, text: 'for i = 1 to n-1:' },
@@ -12,6 +13,81 @@ const PSEUDO = [
   { line: 8, indent: 1, text: '  for j = i-1 downto low: A[j+1] = A[j]' },
   { line: 9, indent: 1, text: '  A[low] = key' },
 ];
+const CODE: CodeBook = {
+  c: [
+    { text: 'void binaryInsertionSort(int a[], int n) {' },
+    { text: '    for (int i = 1; i < n; i++) {', anchor: 1 },
+    { text: '        int key = a[i];', anchor: 2 },
+    { text: '        int low = 0, high = i - 1;', anchor: 3 },
+    { text: '        while (low <= high) {', anchor: 4 },
+    { text: '            int mid = (low + high) / 2;', anchor: 5 },
+    { text: '            if (a[mid] <= key) {', anchor: 6 },
+    { text: '                low = mid + 1;', anchor: 6 },
+    { text: '            } else {', anchor: 7 },
+    { text: '                high = mid - 1;', anchor: 7 },
+    { text: '            }' },
+    { text: '        }' },
+    { text: '        for (int j = i - 1; j >= low; j--) {', anchor: 8 },
+    { text: '            a[j + 1] = a[j];', anchor: 8 },
+    { text: '        }' },
+    { text: '        a[low] = key;', anchor: 9 },
+    { text: '    }' },
+    { text: '}' },
+  ],
+  cpp: [
+    { text: 'void binaryInsertionSort(std::vector<int>& a) {' },
+    { text: '    int n = static_cast<int>(a.size());' },
+    { text: '    for (int i = 1; i < n; ++i) {', anchor: 1 },
+    { text: '        int key = a[i];', anchor: 2 },
+    { text: '        int low = 0, high = i - 1;', anchor: 3 },
+    { text: '        while (low <= high) {', anchor: 4 },
+    { text: '            int mid = (low + high) / 2;', anchor: 5 },
+    { text: '            if (a[mid] <= key) low = mid + 1;', anchor: 6 },
+    { text: '            else high = mid - 1;', anchor: 7 },
+    { text: '        }' },
+    { text: '        for (int j = i - 1; j >= low; --j)', anchor: 8 },
+    { text: '            a[j + 1] = a[j];', anchor: 8 },
+    { text: '        a[low] = key;', anchor: 9 },
+    { text: '    }' },
+    { text: '}' },
+  ],
+  java: [
+    { text: 'void binaryInsertionSort(int[] a) {' },
+    { text: '    for (int i = 1; i < a.length; i++) {', anchor: 1 },
+    { text: '        int key = a[i];', anchor: 2 },
+    { text: '        int low = 0, high = i - 1;', anchor: 3 },
+    { text: '        while (low <= high) {', anchor: 4 },
+    { text: '            int mid = (low + high) / 2;', anchor: 5 },
+    { text: '            if (a[mid] <= key) {', anchor: 6 },
+    { text: '                low = mid + 1;', anchor: 6 },
+    { text: '            } else {', anchor: 7 },
+    { text: '                high = mid - 1;', anchor: 7 },
+    { text: '            }' },
+    { text: '        }' },
+    { text: '        for (int j = i - 1; j >= low; j--) {', anchor: 8 },
+    { text: '            a[j + 1] = a[j];', anchor: 8 },
+    { text: '        }' },
+    { text: '        a[low] = key;', anchor: 9 },
+    { text: '    }' },
+    { text: '}' },
+  ],
+  python: [
+    { text: 'def binary_insertion_sort(a):' },
+    { text: '    n = len(a)' },
+    { text: '    for i in range(1, n):', anchor: 1 },
+    { text: '        key = a[i]', anchor: 2 },
+    { text: '        low, high = 0, i - 1', anchor: 3 },
+    { text: '        while low <= high:', anchor: 4 },
+    { text: '            mid = (low + high) // 2', anchor: 5 },
+    { text: '            if a[mid] <= key:', anchor: 6 },
+    { text: '                low = mid + 1', anchor: 6 },
+    { text: '            else:', anchor: 7 },
+    { text: '                high = mid - 1', anchor: 7 },
+    { text: '        for j in range(i - 1, low - 1, -1):', anchor: 8 },
+    { text: '            a[j + 1] = a[j]', anchor: 8 },
+    { text: '        a[low] = key', anchor: 9 },
+  ],
+};
 
 export const binaryInsertion = {
   id: 'binary-insertion',
@@ -20,6 +96,7 @@ export const binaryInsertion = {
   stable: true,
   complexity: { best: 'O(n log n)', avg: 'O(n²)', worst: 'O(n²)', space: 'O(1)' },
   pseudocode: PSEUDO,
+  code: CODE,
   defaultViews: ['array', 'structure'] as const,
 
   run(input: number[], options?: { order?: Order }): Step[] {
