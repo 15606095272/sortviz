@@ -70,6 +70,7 @@ for (const name of ['插入', '折半插入', '希尔', '冒泡', '快排', '选
     计数器: [...document.querySelectorAll('.stats.counters .stat')].map(s => s.textContent).join(' '),
     高亮行: document.querySelector('.ln.hl')?.textContent?.trim().slice(0, 22) ?? null,
     高亮行数: document.querySelectorAll('.ln.hl').length,
+    代码行数: document.querySelectorAll('.ln').length,
     树层: document.querySelectorAll('.tree-level').length,
     堆节点: document.querySelectorAll('.heap-node').length,
     堆连线: document.querySelectorAll('.heap-edge').length,
@@ -97,8 +98,9 @@ for (const name of ['插入', '折半插入', '希尔', '冒泡', '快排', '选
   console.log(`  计数: ${info.计数器}   动作: ${info.动作说明}`);
   check(total > 1, `${name} 有步骤流`, `总步数 ${total}`);
   check(info.主格数 === 8, `${name} 主数组 8 格`, `实际 ${info.主格数}`);
-  check(info.高亮行数 === 1, `${name} 伪代码恰好 1 行高亮`, `${info.高亮行数} 行`);
+  check(info.高亮行数 >= 1, `${name} 代码面板至少 1 行高亮`, `${info.高亮行数} 行`);
   check(!!info.高亮行, `${name} 高亮行非空`, String(info.高亮行));
+  check(info.代码行数 >= 5, `${name} 代码面板是真代码（≥5 行）`, `${info.代码行数} 行`);
   check(info.变量.length > 0, `${name} 变量面板非空`, info.变量);
   check(!/—/.test(info.变量), `${name} 变量面板无占位符（真值优先）`, info.变量);
   const kind = STRUCTURE[name];
@@ -217,6 +219,44 @@ console.log(`  900px：scrollWidth ${narrow.sw} / innerWidth ${narrow.iw} / ${na
 check(narrow.sw <= narrow.iw, '900px 无横向滚动', `${narrow.sw} vs ${narrow.iw}`);
 check(narrow.cells === 8, '窄屏下总格数不变', String(narrow.cells));
 await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
+
+// —— 增补需求：四语言真实代码 / 升序降序 ——
+console.log('\n=== 真实代码与排序方向 ===');
+const langs = await js(`[...document.querySelectorAll('.langswitch .chip')].map(c => c.textContent)`);
+check(JSON.stringify(langs) === JSON.stringify(['C', 'C++', 'Java', 'Python']), '语言胶囊 4 项', JSON.stringify(langs));
+const codeByLang = {};
+for (const label of ['C', 'C++', 'Java', 'Python']) {
+  await js(`(() => { const c = [...document.querySelectorAll('.langswitch .chip')].find(x => x.textContent === '${label}'); if (c) c.click(); return 1 })()`);
+  await sleep(200);
+  codeByLang[label] = await js(`document.querySelectorAll('.ln')[1]?.textContent ?? ''`);
+  const hl = await js(`document.querySelectorAll('.ln.hl').length`);
+  check(hl >= 1, `${label} 代码有高亮行`, `${hl} 行`);
+}
+console.log(`  C     第2行: ${codeByLang['C']}`);
+console.log(`  C++   第2行: ${codeByLang['C++']}`);
+console.log(`  Java  第2行: ${codeByLang.Java}`);
+console.log(`  Python 第2行: ${codeByLang.Python}`);
+const uniq = new Set(Object.values(codeByLang).map((s) => String(s).trim()));
+check(uniq.size === 4, '四种语言的代码文本各不相同', `${uniq.size} 种`);
+check(/void |def |int\[|vector/.test(Object.values(codeByLang).join(' ')), '代码是真实语言写法（含签名）', Object.values(codeByLang)[0]);
+
+await js(`(() => { const c = [...document.querySelectorAll('.orderswitch .chip')].find(x => x.textContent === '降序'); if (c) c.click(); return 1 })()`);
+await sleep(300);
+const readCells = async () => await js(`[...document.querySelectorAll('.cellrow:not(.auxrow) .cell')].map(c => c.textContent).join(' ')`);
+const totalAfterDesc = await js(`Number((document.body.textContent.match(/第 \\d+ \\/ (\\d+) 步/)||[0,0])[1])`);
+await js(`(() => { const s = document.querySelector('.seek'); s.value = String(${Math.max(1, await js(`Number((document.body.textContent.match(/第 \\d+ \\/ (\\d+) 步/)||[0,0])[1])`))}); s.dispatchEvent(new Event('input', { bubbles: true })); return 1 })()`);
+await sleep(300);
+const descText = await readCells();
+console.log(`  降序走到末尾（总 ${totalAfterDesc} 步）主数组: ${descText}`);
+check(descText === '97 76 65 49 49 38 27 13', '降序走到底 = 降序结果', descText);
+
+await js(`(() => { const c = [...document.querySelectorAll('.orderswitch .chip')].find(x => x.textContent === '升序'); if (c) c.click(); return 1 })()`);
+await sleep(300);
+await js(`(() => { const s = document.querySelector('.seek'); s.value = String(${await js(`Number((document.body.textContent.match(/第 \\d+ \\/ (\\d+) 步/)||[0,0])[1])`)}); s.dispatchEvent(new Event('input', { bubbles: true })); return 1 })()`);
+await sleep(300);
+const ascText = await readCells();
+console.log(`  升序走到末尾主数组: ${ascText}`);
+check(ascText === '13 27 38 49 49 65 76 97', '升序走到底 = 升序结果（方向切回生效）', ascText);
 
 console.log(`\n=== 结论 ===`);
 if (failures.length === 0) {
