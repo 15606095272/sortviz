@@ -75,7 +75,18 @@ describe('真实代码：锚点覆盖', () => {
 });
 
 /** 已经支持「降序代码」的模块（按需求 b 分批迁移：先做 4 个简单模块；其它模块迁移时把 id 加进来） */
-const DIRECTIONAL_MODULES = ['insertion', 'binary-insertion', 'shell', 'bubble'];
+const DIRECTIONAL_MODULES = [
+  'insertion',
+  'binary-insertion',
+  'shell',
+  'bubble',
+  'quick',
+  'selection',
+  'heap',
+  'merge',
+  'radix',
+  'binary-search',
+];
 
 const codeModule = (id: string): CodeModule => {
   const mod = (listAlgorithms() as unknown as CodeModule[]).find((m) => m.id === id);
