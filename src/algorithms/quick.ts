@@ -1,4 +1,5 @@
 import { compareStep, markStep, passEndStep, swapStep, noteStep, unmarkStep, withVars, type Step } from '../core/step';
+import { less, normalizeOrder, type Order } from '../core/order';
 
 const PSEUDO = [
   { line: 1, indent: 0, text: 'QuickSort(A, low, high):' },
@@ -24,7 +25,10 @@ export const quick = {
   pseudocode: PSEUDO,
   defaultViews: ['array', 'structure'] as const,
 
-  run(input: number[]): Step[] {
+  run(input: number[], options?: { order?: Order }): Step[] {
+    const order = normalizeOrder(options?.order);
+    // 方向不同，动作说明里的关系符跟着换：升序把比 pivot 小的换到左边，降序换大的
+    const lt = order === 'desc' ? '>' : '<';
     const a = [...input];
     const steps: Step[] = [];
     let pass = 0;
@@ -35,13 +39,13 @@ export const quick = {
       steps.push(markStep('pivot', [low], 7, `pivot = ${pivot}（取区间第一个元素）`));
       for (let j = low + 1; j <= high; j++) {
         steps.push(withVars(compareStep(j, low, 9, `比较 a[${j}]=${a[j]} 与 pivot=${pivot}`), { i, j, low, high, pivot }));
-        if (a[j] < pivot) {
+        if (less(a[j], pivot, order)) {
           i += 1;
           if (i !== j) {
             [a[i], a[j]] = [a[j], a[i]];
-            steps.push(withVars(swapStep(i, j, 10, `a[${j}]=${a[j]} < pivot → 交换 a[${i}] 与 a[${j}]`), { i, j, low, high, pivot }));
+            steps.push(withVars(swapStep(i, j, 10, `a[${j}]=${a[j]} ${lt} pivot → 交换 a[${i}] 与 a[${j}]`), { i, j, low, high, pivot }));
           } else {
-            steps.push(noteStep(`a[${j}]=${a[j]} < pivot → i 前移，位置本来就对，无需交换`, 10));
+            steps.push(noteStep(`a[${j}]=${a[j]} ${lt} pivot → i 前移，位置本来就对，无需交换`, 10));
           }
         }
       }

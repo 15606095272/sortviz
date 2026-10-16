@@ -1,4 +1,5 @@
 import type { Step } from './step';
+import type { Order } from './order';
 import type { ViewState } from './replay';
 import type { IndexBase } from './index-base';
 
@@ -9,6 +10,12 @@ export interface CodeLine { line: number; indent: number; text: string }
 export interface LocalizedText { zh: string; en: string }
 export interface Complexity { best: string; avg: string; worst: string; space: string }
 
+/**
+ * 可选的运行参数：order = 排序方向（所有模块通用，缺省升序）；target = 查找目标（仅查找类用）。
+ * 契约仍是「一个输入数组进、一个步骤流出」——多出来的只是可选项，run(data) 照旧可用。
+ */
+export interface RunOptions { order?: Order; target?: number }
+
 export interface AlgorithmModule {
   id: string;
   name: LocalizedText;
@@ -17,7 +24,7 @@ export interface AlgorithmModule {
   complexity: Complexity;
   pseudocode: CodeLine[];
   defaultViews: readonly ViewKind[];      // 只读：算法文件里可用 `as const` 而不必强转
-  run(data: number[]): Step[];
+  run(data: number[], options?: RunOptions): Step[];
 }
 
 // indexBase 可选：既有测试与装配层大量构造 { data, algorithmId }，缺省视作 0 基

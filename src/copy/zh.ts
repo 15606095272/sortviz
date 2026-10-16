@@ -56,6 +56,9 @@ export const COPY = {
   themeLabel: '主题',
   themeLight: '浅色',
   themeDark: '深色',
+  orderLabel: '顺序',
+  orderAsc: '升序',
+  orderDesc: '降序',
   structureTagDefault: '结构变化',
   structureTag: {
     insertion: '插入 → 有序区扩张',

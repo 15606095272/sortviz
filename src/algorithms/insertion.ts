@@ -1,4 +1,5 @@
 import { assignStep, compareStep, markStep, passEndStep, withVars, type Step } from '../core/step';
+import { more, normalizeOrder, type Order } from '../core/order';
 
 const PSEUDO = [
   { line: 1, indent: 0, text: 'for i = 1 to n-1:' },
@@ -19,7 +20,10 @@ export const insertion = {
   pseudocode: PSEUDO,
   defaultViews: ['array', 'structure'] as const,
 
-  run(input: number[]): Step[] {
+  run(input: number[], options?: { order?: Order }): Step[] {
+    const order = normalizeOrder(options?.order);
+    // 方向不同，动作说明里的关系符跟着换：升序是 a[j] > key 才后移，降序反之
+    const gt = order === 'desc' ? '<' : '>';
     const a = [...input];
     const n = a.length;
     const steps: Step[] = [];
@@ -34,9 +38,9 @@ export const insertion = {
         // 下标 i 是「空位」：key 已取出，a[i] 的显示值可能已被后移元素覆盖，
         // 比较的对象始终是 key 的值，故动作说明里写 key 而不是 a[i]。
         steps.push(withVars(compareStep(j, i, 4, `比较 a[${j}]=${a[j]} 与待插入的 key=${key}`), { i, j, key }));
-        if (a[j] <= key) break;
+        if (!more(a[j], key, order)) break;
         a[j + 1] = a[j];
-        steps.push(withVars(assignStep(j + 1, a[j], 5, `a[${j}]=${a[j]} > key → 后移一位到 a[${j + 1}]`), { i, j, key }));
+        steps.push(withVars(assignStep(j + 1, a[j], 5, `a[${j}]=${a[j]} ${gt} key → 后移一位到 a[${j + 1}]`), { i, j, key }));
         j -= 1;
       }
       a[j + 1] = key;

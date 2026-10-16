@@ -1,4 +1,5 @@
 import { compareStep, markStep, noteStep, passEndStep, swapStep, withVars, type Step } from '../core/step';
+import { more, normalizeOrder, type Order } from '../core/order';
 
 const PSEUDO = [
   { line: 1, indent: 0, text: 'for i = 0 to n-2:' },
@@ -18,7 +19,11 @@ export const bubble = {
   pseudocode: PSEUDO,
   defaultViews: ['array', 'structure'] as const,
 
-  run(input: number[]): Step[] {
+  run(input: number[], options?: { order?: Order }): Step[] {
+    const order = normalizeOrder(options?.order);
+    // 方向不同，动作说明里的关系符与「谁往右冒」跟着换：升序冒大的，降序冒小的
+    const gt = order === 'desc' ? '<' : '>';
+    const which = order === 'desc' ? '小' : '大';
     const a = [...input];
     const n = a.length;
     const steps: Step[] = [];
@@ -28,10 +33,10 @@ export const bubble = {
       let swapped = false;
       for (let j = 0; j < end; j++) {
         steps.push(withVars(compareStep(j, j + 1, 4, `比较 a[${j}]=${a[j]} 与 a[${j + 1}]=${a[j + 1]}`), { i, j }));
-        if (a[j] > a[j + 1]) {
+        if (more(a[j], a[j + 1], order)) {
           [a[j], a[j + 1]] = [a[j + 1], a[j]];
           swapped = true;
-          steps.push(withVars(swapStep(j, j + 1, 5, `a[${j}] > a[${j + 1}] → 交换，大的往右冒`), { i, j }));
+          steps.push(withVars(swapStep(j, j + 1, 5, `a[${j}] ${gt} a[${j + 1}] → 交换，${which}的往右冒`), { i, j }));
         }
       }
       steps.push(markStep('sorted', [end], 1, `第 ${i + 1} 趟结束：a[${end}] 已就位`));

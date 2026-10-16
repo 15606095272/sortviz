@@ -1,4 +1,5 @@
 import { assignStep, compareStep, markStep, noteStep, passEndStep, withVars, type Step } from '../core/step';
+import { more, normalizeOrder, type Order } from '../core/order';
 
 const PSEUDO = [
   { line: 1, indent: 0, text: 'for i = 1 to n-1:' },
@@ -21,7 +22,11 @@ export const binaryInsertion = {
   pseudocode: PSEUDO,
   defaultViews: ['array', 'structure'] as const,
 
-  run(input: number[]): Step[] {
+  run(input: number[], options?: { order?: Order }): Step[] {
+    const order = normalizeOrder(options?.order);
+    // 方向不同，动作说明里的关系符跟着换：升序是 a[mid] ≤ key 往右半区，降序反之
+    const le = order === 'desc' ? '≥' : '≤';
+    const gtText = order === 'desc' ? '<' : '>';
     const a = [...input];
     const n = a.length;
     const steps: Step[] = [];
@@ -37,12 +42,12 @@ export const binaryInsertion = {
         const mid = (low + high) >> 1;
         // 下标 i 是空位（key 已取出），比较对象始终是 key，故说明里写 key
         steps.push(withVars(compareStep(mid, i, 5, `折半比较 a[${mid}]=${a[mid]} 与 key=${key}`), { i, mid, low, high, key }));
-        if (a[mid] <= key) {
-          // 等值时往右半区找：相等元素的相对次序不变 → 稳定
-          steps.push(noteStep(`a[${mid}]=${a[mid]} ≤ key=${key} → 插入位置在右半区`, 6));
+        if (!more(a[mid], key, order)) {
+          // 「不在 key 之后」就往右半区找：等值时也走这一支，相等元素的相对次序不变 → 稳定
+          steps.push(noteStep(`a[${mid}]=${a[mid]} ${le} key=${key} → 插入位置在右半区`, 6));
           low = mid + 1;
         } else {
-          steps.push(noteStep(`a[${mid}]=${a[mid]} > key=${key} → 插入位置在左半区`, 7));
+          steps.push(noteStep(`a[${mid}]=${a[mid]} ${gtText} key=${key} → 插入位置在左半区`, 7));
           high = mid - 1;
         }
       }

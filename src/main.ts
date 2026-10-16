@@ -15,6 +15,7 @@ import { COPY } from './copy/zh';
 import type { Step } from './core/step';
 import { formatIndex, type IndexBase } from './core/index-base';
 import { applyTheme, loadTheme, saveTheme, type Theme } from './ui/theme';
+import { loadOrder, saveOrder, type Order } from './core/order';
 import { prefersReducedMotion, stepDuration } from './ui/motion';
 
 const MAX_STEPS = 20000;
@@ -41,6 +42,7 @@ export function mountApp(root: HTMLElement): void {
   let controls: Controls | null = null;      // 先声明后赋值：renderAt 内部要用
   let indexBase: IndexBase = 0;              // 展示口径：内部一律 0 基，切 1 基只改显示与文案
   let viewKind: ViewKind = 'array';          // 左侧主视图：数组视图 / 柱状图（右侧结构视图始终保留）
+  let order: Order = loadOrder(window.localStorage);   // 排序方向：默认升序，偏好存 localStorage
 
   // 切换主视图时互斥：先销毁两个主视图再挂载当前那个（避免残留 DOM 与事件）
   const mountMainView = (ctx: ViewContext): void => {
@@ -144,13 +146,21 @@ export function mountApp(root: HTMLElement): void {
       saveTheme(theme, window.localStorage);
       controls?.setTheme(theme);
     },
+    // 切排序方向：步骤流本身就依赖方向，所以必须重跑算法（不是只重渲染当前步）
+    onOrder: (next) => {
+      order = next;
+      saveOrder(order, window.localStorage);
+      controls?.setOrder(order);
+      rebuild();
+    },
   });
 
   function rebuild(nextAlgorithmId = algorithmId, nextData = data): void {
     algorithmId = nextAlgorithmId;
     data = [...nextData];
     const ctx: ViewContext = { data, algorithmId, indexBase };
-    steps = getAlgorithm(algorithmId).run(data);
+    // 方向作为可选参数传给每个算法模块（run 的契约仍是 (input) => Step[]，多一个可选参数不破坏契约）
+    steps = getAlgorithm(algorithmId).run(data, { order });
     if (steps.length > MAX_STEPS) { steps = steps.slice(0, MAX_STEPS); controls?.setError(COPY.errorTooLong); }
     // 先 mount 再 setSteps：setSteps 会立刻 emit renderAt(0)，而视图的 render 在
     // mount 之前会直接 return（内部 host 还是 null）。反过来的话首帧就是 8 个空格子。
@@ -163,6 +173,7 @@ export function mountApp(root: HTMLElement): void {
   controls?.setIndexBase(indexBase);
   controls?.setView(viewKind);
   controls?.setTheme(theme);
+  controls?.setOrder(order);
 
   // 全局键盘快捷键：空格播放/暂停、←/→ 单步、Shift+←/→ 跳趟、1..9 切算法。
   // handleKey 在输入框内一律返回 false，所以这里放心 preventDefault（也不会吞掉打字）。

@@ -1,4 +1,5 @@
 import { assignStep, auxWriteStep, markStep, noteStep, passEndStep, withVars, type Step } from '../core/step';
+import { normalizeOrder, type Order } from '../core/order';
 
 const PSEUDO = [
   { line: 1, indent: 0, text: 'RadixSort(A):' },
@@ -18,7 +19,8 @@ export const radix = {
   pseudocode: PSEUDO,
   defaultViews: ['array', 'structure'] as const,
 
-  run(input: number[]): Step[] {
+  run(input: number[], options?: { order?: Order }): Step[] {
+    const order = normalizeOrder(options?.order);
     const a = [...input];
     const n = a.length;
     const steps: Step[] = [];
@@ -38,7 +40,9 @@ export const radix = {
       }
       // 按桶序收集（桶内 FIFO → 稳定）；辅助数组按收集顺序写入，回填主数组记移动
       let k = 0;
-      for (let b = 0; b < base; b++) {
+      // 降序时反向收集（桶 9 → 0）；桶内仍 FIFO → 两个方向都稳定
+      const seq = order === 'desc' ? [...Array(base).keys()].reverse() : [...Array(base).keys()];
+      for (const b of seq) {
         for (const value of buckets[b]) {
           steps.push(withVars(auxWriteStep(k, value, 5, `从桶 ${b} 取出 ${value} → aux[${k}]`), { k, place: d + 1 }));
           a[k] = value;

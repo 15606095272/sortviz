@@ -48,6 +48,7 @@ describe('控制条', () => {
       onSpeed: (m) => calls.push(`speed:${m}`),
       onIndexBase: (base) => calls.push(`indexbase:${base}`),
       onView: (kind) => calls.push(`view:${kind}`),
+      onOrder: (order) => calls.push(`order:${order}`),
       onTheme: (theme) => calls.push(`theme:${theme}`),
     });
     return { host, controls, calls, applied };
@@ -131,5 +132,16 @@ describe('控制条', () => {
     expect(chip.getAttribute('tabindex')).toBe('0');
     chip.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
     expect(calls).toContain('algo:insertion');
+  });
+
+  it('顺序胶囊在 .orderswitch 里，点击回调带 asc/desc', () => {
+    const { host, controls, calls } = setup();
+    const caps = [...host.querySelectorAll('.orderswitch .chip')] as HTMLElement[];
+    expect(caps.map((c) => c.textContent)).toEqual([COPY.orderAsc, COPY.orderDesc]);
+    caps[1].click();
+    expect(calls).toContain('order:desc');
+    controls.setOrder('desc');
+    expect(caps[1].classList.contains('on')).toBe(true);
+    expect(caps[0].classList.contains('on')).toBe(false);
   });
 });

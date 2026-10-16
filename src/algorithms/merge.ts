@@ -1,4 +1,5 @@
 import { assignStep, auxWriteStep, compareStep, markStep, passEndStep, unmarkStep, withVars, type Step } from '../core/step';
+import { more, normalizeOrder, type Order } from '../core/order';
 
 const PSEUDO = [
   { line: 1, indent: 0, text: 'MergeSort(A):' },
@@ -25,7 +26,10 @@ export const merge = {
   pseudocode: PSEUDO,
   defaultViews: ['array', 'structure'] as const,
 
-  run(input: number[]): Step[] {
+  run(input: number[], options?: { order?: Order }): Step[] {
+    const order = normalizeOrder(options?.order);
+    // 方向不同，动作说明里的关系符跟着换；等值仍取左段 → 两个方向都稳定
+    const le = order === 'desc' ? '≥' : '≤';
     const a = [...input];
     const n = a.length;
     const steps: Step[] = [];
@@ -47,14 +51,14 @@ export const merge = {
       let k = lo;
       while (i <= mid && j <= hi) {
         steps.push(withVars(compareStep(i, j, 9, `比较 a[${i}]=${a[i]} 与 a[${j}]=${a[j]}`), { lo, mid, hi, i, j, width }));
-        if (a[i] <= a[j]) {
+        if (!more(a[i], a[j], order)) {
           // 相等时取左段（等值元素保持原相对次序 → 归并排序稳定）
           aux[k] = a[i];
-          steps.push(auxWriteStep(k, a[i], 9, `a[${i}]=${a[i]} ≤ a[${j}]=${a[j]} → 取左段放入 aux[${k}]`));
+          steps.push(auxWriteStep(k, a[i], 9, `a[${i}]=${a[i]} ${le} a[${j}]=${a[j]} → 取左段放入 aux[${k}]`));
           i += 1;
         } else {
           aux[k] = a[j];
-          steps.push(auxWriteStep(k, a[j], 10, `a[${j}]=${a[j]} 更小 → 取右段放入 aux[${k}]`));
+          steps.push(auxWriteStep(k, a[j], 10, `a[${j}]=${a[j]} 更靠前 → 取右段放入 aux[${k}]`));
           j += 1;
         }
         k += 1;

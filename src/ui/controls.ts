@@ -2,6 +2,7 @@ import { COPY } from '../copy/zh';
 import { getAlgorithm, type ViewKind } from '../core/registry';
 import type { IndexBase } from '../core/index-base';
 import type { Theme } from '../ui/theme';
+import type { Order } from '../core/order';
 
 export type ParseResult = { ok: true; data: number[] } | { ok: false; message: string };
 
@@ -36,6 +37,7 @@ export interface ControlsHandlers {
   onIndexBase(base: IndexBase): void;
   onView(kind: ViewKind): void;               // 主视图切换：数组视图 ↔ 柱状图（结构视图始终保留）
   onTheme(theme: Theme): void;                // 深浅主题：只切 token，不重建视图
+  onOrder(order: Order): void;                // 排序方向：升降序切换，装配层会重跑算法
 }
 
 export interface Controls {
@@ -46,6 +48,7 @@ export interface Controls {
   setView(kind: ViewKind): void;       // 装配层回灌当前主视图，同步胶囊高亮（与 setIndexBase 同风格）
   setAlgorithm(id: string): void;      // 装配层回灌当前算法，同步 chip 高亮（键盘数字键切算法时用）
   setTheme(theme: Theme): void;        // 装配层回灌当前主题，同步胶囊高亮（与 setView 同风格）
+  setOrder(order: Order): void;        // 装配层回灌当前排序方向，同步胶囊高亮（与 setTheme 同风格）
 }
 
 /** 实物稿里的默认演示数据（数据结构的经典样例序列） */
@@ -227,6 +230,33 @@ export function createControls(host: HTMLElement, handlers: ControlsHandlers): C
   );
   setIndexBase(0);
 
+  // —— 顺序（升序 / 降序）——
+  // 方向会改变步骤流本身（比较谓词翻转），所以 onOrder 由装配层负责重跑算法；
+  // 容器类名 orderswitch 与 .chips/.indexbase/.viewswitch/.themeswitch 分开，互不影响既有选择器
+  const orderGroup = mk('div', 'ctrlgroup orderswitch');
+  const orderCaps: { order: Order; cap: HTMLElement }[] = [];
+  const setOrder = (order: Order): void => {
+    for (const item of orderCaps) item.cap.classList.toggle('on', item.order === order);
+  };
+  const orderCap = (order: Order, text: string): HTMLElement => {
+    const cap = mk('span', 'chip', text);
+    cap.dataset.order = order;
+    const pick = (): void => {
+      setOrder(order);                 // 本地先亮（与 indexbase/viewswitch 同风格），装配层随后回灌
+      handlers.onOrder(order);
+    };
+    cap.addEventListener('click', pick);
+    activatable(cap, pick);
+    orderCaps.push({ order, cap });
+    return cap;
+  };
+  orderGroup.append(
+    mk('span', 'lab', COPY.orderLabel),
+    orderCap('asc', COPY.orderAsc),
+    orderCap('desc', COPY.orderDesc),
+  );
+  setOrder('asc');
+
   // —— 主视图（数组视图 / 柱状图）——
   // 只切换左侧主视图，右侧结构视图始终保留；容器类名 viewswitch 与算法 chips(.chips)、
   // 下标进制(.indexbase) 分开，互不影响既有选择器
@@ -335,7 +365,7 @@ export function createControls(host: HTMLElement, handlers: ControlsHandlers): C
   seekInput.addEventListener('input', () => handlers.onSeek(Number(seekInput.value)));
   progress.append(bar, ptext, seekInput);
 
-  host.append(chipRow, mk('span', 'sep'), dataGroup, mk('span', 'sep'), viewGroup, mk('span', 'sep'), indexBaseGroup, mk('span', 'sep'), themeGroup, mk('span', 'sep'), transport, progress, errRow);
+  host.append(chipRow, mk('span', 'sep'), dataGroup, mk('span', 'sep'), viewGroup, mk('span', 'sep'), indexBaseGroup, mk('span', 'sep'), orderGroup, mk('span', 'sep'), themeGroup, mk('span', 'sep'), transport, progress, errRow);
 
   const setProgress = (nextIndex: number, nextTotal: number, speed: number, isPlaying: boolean): void => {
     index = nextIndex;
@@ -356,5 +386,5 @@ export function createControls(host: HTMLElement, handlers: ControlsHandlers): C
 
   const setPass = (text: string): void => { passText.textContent = text; };
 
-  return { setError, setProgress, setPass, setIndexBase, setView, setAlgorithm, setTheme };
+  return { setError, setProgress, setPass, setIndexBase, setView, setAlgorithm, setTheme, setOrder };
 }

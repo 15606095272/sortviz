@@ -1,4 +1,5 @@
 import { compareStep, markStep, noteStep, passEndStep, swapStep, unmarkStep, withVars, type Step } from '../core/step';
+import { less, normalizeOrder, type Order } from '../core/order';
 
 const PSEUDO = [
   { line: 1, indent: 0, text: 'for i = 0 to n-2:' },
@@ -17,7 +18,11 @@ export const selection = {
   pseudocode: PSEUDO,
   defaultViews: ['array', 'structure'] as const,
 
-  run(input: number[]): Step[] {
+  run(input: number[], options?: { order?: Order }): Step[] {
+    // 变量键仍叫 minIndex（panels 的键序表按它渲染）；降序时它是「当前最值下标」——
+    // 升序选最小、降序选最大，逻辑同一套，只换比较谓词与文案
+    const order = normalizeOrder(options?.order);
+    const best = order === 'desc' ? '最大' : '最小';
     const a = [...input];
     const n = a.length;
     const steps: Step[] = [];
@@ -25,21 +30,21 @@ export const selection = {
     for (let i = 0; i < n - 1; i++) {
       let minIndex = i;
       // 'pivot' 标记在这里表示「当前最小候选」——数组视图会把它画成紫色基准格
-      steps.push(markStep('pivot', [minIndex], 2, `第 ${i + 1} 趟：先假定 a[${i}]=${a[i]} 是剩余部分的最小值`));
+      steps.push(markStep('pivot', [minIndex], 2, `第 ${i + 1} 趟：先假定 a[${i}]=${a[i]} 是剩余部分的${best}值`));
       for (let j = i + 1; j < n; j++) {
-        steps.push(withVars(compareStep(j, minIndex, 4, `比较 a[${j}]=${a[j]} 与当前最小 a[${minIndex}]=${a[minIndex]}`), { i, j, minIndex }));
-        if (a[j] < a[minIndex]) {
-          steps.push(unmarkStep('pivot', [minIndex], 4, `a[${j}]=${a[j]} 更小 → 更新最小下标`));
+        steps.push(withVars(compareStep(j, minIndex, 4, `比较 a[${j}]=${a[j]} 与当前最值 a[${minIndex}]=${a[minIndex]}`), { i, j, minIndex }));
+        if (less(a[j], a[minIndex], order)) {
+          steps.push(unmarkStep('pivot', [minIndex], 4, `a[${j}]=${a[j]} 更靠前 → 更新最值下标`));
           minIndex = j;
-          steps.push(markStep('pivot', [minIndex], 4, `当前最小下标 = ${minIndex}（值 ${a[minIndex]}）`));
+          steps.push(markStep('pivot', [minIndex], 4, `当前最值下标 = ${minIndex}（值 ${a[minIndex]}）`));
         }
       }
-      steps.push(unmarkStep('pivot', [minIndex], 5, `本趟最小下标确定为 ${minIndex}`));
+      steps.push(unmarkStep('pivot', [minIndex], 5, `本趟最值下标确定为 ${minIndex}`));
       if (minIndex !== i) {
         [a[i], a[minIndex]] = [a[minIndex], a[i]];
         steps.push(withVars(swapStep(i, minIndex, 5, `交换 a[${i}] 与 a[${minIndex}] → a[${i}]=${a[i]} 就位`), { i, minIndex }));
       } else {
-        steps.push(noteStep(`a[${i}]=${a[i]} 本来就是最小值 → 本趟不交换`, 5));
+        steps.push(noteStep(`a[${i}]=${a[i]} 本来就是${best}值 → 本趟不交换`, 5));
       }
       steps.push(markStep('sorted', [i], 1, `第 ${i + 1} 趟结束：a[${i}] 就位`));
       steps.push(passEndStep(a, 5, `第 ${i + 1} 趟结束`));

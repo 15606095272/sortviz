@@ -1,4 +1,5 @@
 import { compareStep, markStep, noteStep, passEndStep, unmarkStep, withVars, type Step } from '../core/step';
+import { less, normalizeOrder, type Order } from '../core/order';
 
 const PSEUDO = [
   { line: 1, indent: 0, text: 'BinarySearch(A, target):' },
@@ -21,15 +22,21 @@ export const binarySearch = {
   defaultViews: ['array'] as const,
 
   /** 在「界面显示的那份数据」上直接查找（不排序副本，否则高亮下标会错位）。
-   *  折半查找要求有序表，未排好序时结果无意义——开头会说明这一点。 */
-  run(input: number[], target?: number): Step[] {
+   *  折半查找要求有序表，未排好序时结果无意义——开头会说明这一点。
+   *  第二参数兼容两种写法：位置参数 `run(data, 65)` 与选项对象 `run(data, { order, target })`。 */
+  run(input: number[], options?: { order?: Order; target?: number } | number): Step[] {
+    const opts = typeof options === 'number' ? { target: options } : options ?? {};
+    const order = normalizeOrder(opts.order);
+    // 方向不同，动作说明里的关系符跟着换：升序是 a[mid] < target 往右半，降序反之
+    const lt = order === 'desc' ? '>' : '<';
+    const gt = order === 'desc' ? '<' : '>';
     const a = [...input];
     const n = a.length;
     const steps: Step[] = [];
     if (n === 0) return steps;
 
-    const wanted = target ?? a[1] ?? a[0];
-    steps.push(noteStep('折半查找要求有序表：若数据未按升序排好，结果无意义（可先用任一排序算法排好）', 1));
+    const wanted = opts.target ?? a[1] ?? a[0];
+    steps.push(noteStep('折半查找要求有序表：若数据未按升序排好，结果无意义（可先用任一排序算法排好）；升序/降序均可，与当前顺序开关一致', 1));
 
     const span = (lo: number, hi: number): number[] => {
       const out: number[] = [];
@@ -55,11 +62,11 @@ export const binarySearch = {
         steps.push(passEndStep(a, 8, `查找结束：命中下标 ${mid}`));
         return steps;
       }
-      if (a[mid] < wanted) {
-        steps.push(unmarkStep('range', span(low, high), 6, `a[${mid}] < target → 到右半继续找`));
+      if (less(a[mid], wanted, order)) {
+        steps.push(unmarkStep('range', span(low, high), 6, `a[${mid}] ${lt} target → 到右半继续找`));
         low = mid + 1;
       } else {
-        steps.push(unmarkStep('range', span(low, high), 7, `a[${mid}] > target → 到左半继续找`));
+        steps.push(unmarkStep('range', span(low, high), 7, `a[${mid}] ${gt} target → 到左半继续找`));
         high = mid - 1;
       }
       if (low <= high) {
