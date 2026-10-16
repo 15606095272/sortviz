@@ -255,6 +255,7 @@ for (const [label, text] of Object.entries(codeByLang)) {
 }
 const uniq = new Set(Object.values(codeByLang).map((s) => String(s).replace(/\\s+/g, ' ').trim()));
 check(uniq.size === 4, '四种语言的代码文本各不相同', `${uniq.size} 种`);
+check(/<\s*pivot/.test(String(codeByLang['C'])), '升序下代码面板比较行取升序写法（< pivot）', (String(codeByLang['C']).match(/if \(a\[j\][^\n]*/) || ['无'])[0]);
 check(/def\s|range\(/.test(String(codeByLang.Python)), 'Python 面板是 Python 写法（def/range）', String(codeByLang.Python).split('\\n')[1]);
 check(/(void|int|bool)\s+\w+Sort|int\[\]|std::vector|\*a/.test(String(codeByLang['C'])), 'C 面板是 C 写法（函数签名/数组）', String(codeByLang['C']).split('\\n')[0]);
 check(/std::vector|std::swap|vector</.test(String(codeByLang['C++'])), 'C++ 面板用 STL', String(codeByLang['C++']).split('\\n')[1]);
@@ -267,6 +268,30 @@ const totalAfterDesc = await js(`Number((document.body.textContent.match(/第 \\
 await js(`(() => { const s = document.querySelector('.seek'); s.value = String(${Math.max(1, await js(`Number((document.body.textContent.match(/第 \\d+ \\/ (\\d+) 步/)||[0,0])[1])`))}); s.dispatchEvent(new Event('input', { bubbles: true })); return 1 })()`);
 await sleep(300);
 const descText = await readCells();
+await js(`(() => { const c = [...document.querySelectorAll('.langswitch .chip')].find(x => x.textContent === 'C'); if (c) c.click(); return 1 })()`);
+await sleep(250);
+const descCode = await js(`[...document.querySelectorAll('.ln')].map((n) => n.textContent).join('\\n')`);
+const descCmp = (String(descCode).match(/if \(a\[j\][^\n]*/) || ['无'])[0];
+check(/>\s*pivot/.test(String(descCode)), '降序下代码面板比较行取降序写法（> pivot）', descCmp);
+console.log(`  降序代码比较行: ${descCmp}`);
+
+// 降序下逐个模块检查"方向相关行"是否真的换了写法（不能只验快排）
+// 判据取自实现口径：堆升序建大顶堆/降序建小顶堆、选择升序找最小/降序找最大、
+// 基数降序反向收桶、归并降序取右段优先
+const descMarkers = {
+  堆排: /buildMinHeap/,
+  选择: /maxIndex/,
+  基数: /for \(int b = 9;/,
+  归并: /a\[i\] >= a\[j\]/,
+};
+for (const [algoName, re] of Object.entries(descMarkers)) {
+  await js(`(() => { const c = [...document.querySelectorAll('.chips .chip')].find(x => x.textContent === '${algoName}'); if (c) c.click(); return 1 })()`);
+  await sleep(340);
+  const text = String(await js(`[...document.querySelectorAll('.ln')].map((n) => n.textContent).join('\\n')`));
+  const hit = text.split('\\n').find((l) => re.test(l)) || '';
+  check(re.test(text), `降序 · ${algoName} 代码取降序写法`, hit.trim() || '未命中');
+  console.log(`  降序 · ${algoName}: ${hit.trim()}`);
+}
 console.log(`  降序走到末尾（总 ${totalAfterDesc} 步）主数组: ${descText}`);
 check(descText === '97 76 65 49 49 38 27 13', '降序走到底 = 降序结果', descText);
 
