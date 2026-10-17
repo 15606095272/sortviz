@@ -763,6 +763,17 @@ input[type="range"].seek::-moz-range-thumb { opacity: 0; }
   border-radius: 4px;
 }
 
+/* 代码卡下方的口径提示（1 基时才有内容；空内容不占位）：沿用 muted 小字 */
+.codehint {
+  margin: 6px 0 0;
+  padding: 0 8px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.codehint:empty { display: none; }
+
 /* ── 每趟结果 ───────────────────────────────────────────────────── */
 .passtable { overflow: auto; }
 

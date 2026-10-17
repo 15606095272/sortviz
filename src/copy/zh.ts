@@ -66,7 +66,8 @@ export const COPY = {
   langJava: 'Java',
   langPython: 'Python',
   panelCode: '代码',                             // 迁移到真实代码后代码卡的标题（伪代码标题 panelPseudo 仍作回落）
-  codeTag: '{lang} 代码',                       // 代码卡右上角标签（降序时再拼上「· 降序」）
+  codeTag: '{lang} 代码',                       // 代码卡右上角标签（再按需拼上「· 1 基」「· 降序」）
+  codeBase1Hint: '1 基口径：a[1..n] 存放数据（a[0] 不用），循环从下标 1 开始',   // 切到 1 基时代码卡下方的口径提示
   structureTagDefault: '结构变化',
   structureTag: {
     insertion: '插入 → 有序区扩张',

@@ -122,10 +122,85 @@ describe('真实代码：随排序方向变化', () => {
       const mod = codeModule(id);
       for (const lang of CODE_LANGS) {
         const lines = mod.code![lang];
-        const asc = lines.map((l) => codeText(l, 'asc')).join('\n');
-        const desc = lines.map((l) => codeText(l, 'desc')).join('\n');
+        const asc = lines.map((l) => codeText(l, { order: 'asc', base: 0 })).join('\n');
+        const desc = lines.map((l) => codeText(l, { order: 'desc', base: 0 })).join('\n');
         expect(desc, `${id}/${lang} 降序渲染出的代码与升序完全一样`).not.toBe(asc);
         expect(asc, `${id}/${lang} 升序文本漂移了`).toBe(lines.map((l) => l.text).join('\n'));
+      }
+    }
+  });
+});
+
+/**
+ * 已经补上「1 基代码」的模块（本批先做 4 个简单模块；其它模块迁移时把 id 加进来）。
+ * 三条规则对 BASE_MODULES 全量生效——未迁移的模块加进白名单会立刻变红，这是护栏的本意。
+ */
+const BASE_MODULES = ['insertion', 'binary-insertion', 'shell', 'bubble'];
+
+/** 四种组合的渲染结果（整块代码文本），用于「两两不同」的判定 */
+const VIEWS = [
+  { name: '0基·升序', view: { order: 'asc', base: 0 } },
+  { name: '0基·降序', view: { order: 'desc', base: 0 } },
+  { name: '1基·升序', view: { order: 'asc', base: 1 } },
+  { name: '1基·降序', view: { order: 'desc', base: 1 } },
+] as const;
+
+describe('真实代码：随下标进制变化', () => {
+  resetRegistry();
+  registerBuiltinAlgorithms();
+
+  it('进制敏感模块的每种语言都至少有一行 text1，且与 text 不同（防漏写/防同文）', () => {
+    for (const id of BASE_MODULES) {
+      const mod = codeModule(id);
+      expect(mod.code, `${id} 缺少 code`).toBeDefined();
+      for (const lang of CODE_LANGS) {
+        const lines = mod.code![lang];
+        const overridden = lines.filter((l) => l.text1 !== undefined);
+        expect(
+          overridden.length,
+          `${id}/${lang} 一行 text1 都没写：1 基代码会静默等于 0 基（下标错位，读者被骗）`,
+        ).toBeGreaterThan(0);
+        for (const l of overridden) {
+          expect(l.text1, `${id}/${lang} 的 text1 与 text 一模一样，等于没写`).not.toBe(l.text);
+        }
+      }
+    }
+  });
+
+  it('同时声明 text1 与 descText 的行必须也有 descText1（否则 1 基·降序 会退化成 0 基·降序）', () => {
+    for (const id of BASE_MODULES) {
+      const mod = codeModule(id);
+      for (const lang of CODE_LANGS) {
+        for (const line of mod.code![lang]) {
+          if (line.text1 === undefined || line.descText === undefined) continue;
+          expect(
+            line.descText1,
+            `${id}/${lang} 行「${line.text.trim()}」既有 text1 又有 descText，却缺 descText1：1 基·降序 会拿到 0 基的下标`,
+          ).toBeDefined();
+          expect(line.descText1, `${id}/${lang} 的 descText1 与 text1 一样，方向没反`).not.toBe(line.text1);
+        }
+      }
+    }
+  });
+
+  it('四种组合渲染出的代码文本两两不同（进制与方向都必须真的改变渲染结果）', () => {
+    for (const id of BASE_MODULES) {
+      const mod = codeModule(id);
+      for (const lang of CODE_LANGS) {
+        const lines = mod.code![lang];
+        const rendered = new Map<string, string>(
+          VIEWS.map(({ name, view }) => [name, lines.map((l) => codeText(l, view)).join('\n')] as [string, string]),
+        );
+        // 只需这四对：0升≠1升（进制生效）、0升≠0降（方向生效）、1升≠1降（1 基下方向仍生效）、0降≠1降（降序下进制仍生效）
+        const pairs: Array<[string, string]> = [
+          ['0基·升序', '1基·升序'],
+          ['0基·升序', '0基·降序'],
+          ['1基·升序', '1基·降序'],
+          ['0基·降序', '1基·降序'],
+        ];
+        for (const [a, b] of pairs) {
+          expect(rendered.get(a), `${id}/${lang}：${a} 与 ${b} 渲染出的代码完全一样`).not.toBe(rendered.get(b));
+        }
       }
     }
   });

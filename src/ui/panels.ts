@@ -1,9 +1,8 @@
 import type { CodeLine, Complexity } from '../core/registry';
 import type { ViewState } from '../core/replay';
 import type { Stats } from '../core/step';
-import type { CodeBook, CodeLang } from '../core/code';
+import type { CodeBook, CodeLang, CodeView } from '../core/code';
 import { codeFor, codeText } from '../core/code';
-import type { Order } from '../core/order';
 import { COPY } from '../copy/zh';
 import { formatIndex, rewriteIndices, type IndexBase } from '../core/index-base';
 
@@ -56,9 +55,16 @@ export function renderPseudocode(host: HTMLElement, pseudocode: readonly CodeLin
  * 真实代码：每行一个 .ln，行号在 <b> 里（沿用 renderPseudocode 的 DOM 契约：.ln / .ln b / .ln.hl）。
  * 高亮规则：把 anchor === 当前语义行号的真实行**全部**标 hl —— 一个语义行常对应多行真实代码
  * （例如 `while (...) {` 与它的 `}` 都算「比较/循环」这一行）。
- * 文本按 order 走 codeText：升序恒用 text（与改造前逐字一致），降序若该行声明了 descText 则改用它。
+ * 文本按 view 走 codeText：0 基·升序恒用 text（与改造前逐字一致），
+ * 降序若声明了 descText、1 基若声明了 text1（1 基·降序优先 descText1）则改用它。
  */
-export function renderCode(host: HTMLElement, book: CodeBook, lang: CodeLang, codeLine: number | undefined, order: Order = 'asc'): void {
+export function renderCode(
+  host: HTMLElement,
+  book: CodeBook,
+  lang: CodeLang,
+  codeLine: number | undefined,
+  view: CodeView = { order: 'asc', base: 0 },
+): void {
   host.innerHTML = '';
   codeFor(book, lang).forEach((entry, i) => {
     const row = document.createElement('span');
@@ -66,7 +72,7 @@ export function renderCode(host: HTMLElement, book: CodeBook, lang: CodeLang, co
     if (codeLine !== undefined && entry.anchor === codeLine) row.classList.add('hl');
     const num = document.createElement('b');
     num.textContent = String(i + 1);        // 展示序号 1..n，与 anchor（语义行号）无关
-    row.append(num, document.createTextNode(codeText(entry, order)));
+    row.append(num, document.createTextNode(codeText(entry, view)));
     host.append(row);
   });
 }

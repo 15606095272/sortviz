@@ -44,6 +44,10 @@ export function mountApp(root: HTMLElement): void {
   registerView(createStructureView());
 
   const layout = createLayout(root);
+  // 代码卡下方的「1 基口径」提示（挂在代码卡里、pre 之后；0 基时清空，.codehint:empty 不占位）
+  const codeHint = document.createElement('div');
+  codeHint.className = 'codehint';
+  layout.pseudoHost.parentElement?.append(codeHint);
   let algorithmId = listAlgorithms()[0].id;
   let data = [...DEFAULT_DATA];
   let steps: Step[] = [];
@@ -81,14 +85,19 @@ export function mountApp(root: HTMLElement): void {
     const activeLine = state.lastCodeLine || algo.pseudocode[0]?.line || 0;
     // 已迁移到真实代码的模块渲染四语言代码（高亮按 anchor 命中，可能多行），
     // 未迁移的模块回落渲染 pseudocode 骨架（保证 9 个模块不迁移也能正常用）
-    if (algo.code) renderCode(layout.pseudoHost, algo.code, lang, activeLine, order);
+    if (algo.code) renderCode(layout.pseudoHost, algo.code, lang, activeLine, { order, base: indexBase });
     else renderPseudocode(layout.pseudoHost, algo.pseudocode, activeLine);
-    // 代码卡标题与右上角标签：有真实代码时写「{lang} 代码」，降序再拼上「· 降序」——
-    // 面板里的代码本身已随方向切换（行级 descText 覆盖），所以不再需要「请自行反相比较符」这类提示
+    // 代码卡标题与右上角标签：有真实代码时写「{lang} 代码」，再按实际口径拼「· 1 基」「· 降序」——
+    // 面板里的代码本身已随方向与下标进制切换（行级 descText/text1/descText1 覆盖），
+    // 所以不再需要「请自行反相比较符」这类提示
     layout.pseudoTitle.textContent = algo.code ? COPY.panelCode : COPY.panelPseudo;
     layout.pseudoTag.textContent = algo.code
-      ? COPY.codeTag.replace('{lang}', LANG_TEXT[lang]) + (order === 'desc' ? ` · ${COPY.orderDesc}` : '')
+      ? COPY.codeTag.replace('{lang}', LANG_TEXT[lang])
+        + (indexBase === 1 ? ` · ${COPY.indexBaseOne}` : '')
+        + (order === 'desc' ? ` · ${COPY.orderDesc}` : '')
       : COPY.panelPseudoTag;
+    // 1 基口径提示：教材把数据放在 a[1..n]、a[0] 空着，循环从 1 开始（代码面板的下标已跟着换）
+    codeHint.textContent = indexBase === 1 ? COPY.codeBase1Hint : '';
     renderVars(layout.varsHost, state, algorithmId, indexBase);
     renderCounters(layout.countersHost, deriveStats(steps, index));
     renderActionNote(layout.noteHost, state.lastNote, indexBase);

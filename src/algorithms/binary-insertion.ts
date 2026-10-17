@@ -16,9 +16,9 @@ const PSEUDO = [
 const CODE: CodeBook = {
   c: [
     { text: 'void binaryInsertionSort(int a[], int n) {' },
-    { text: '    for (int i = 1; i < n; i++) {', anchor: 1 },
+    { text: '    for (int i = 1; i < n; i++) {', text1: '    for (int i = 2; i <= n; i++) {', anchor: 1 },
     { text: '        int key = a[i];', anchor: 2 },
-    { text: '        int low = 0, high = i - 1;', anchor: 3 },
+    { text: '        int low = 0, high = i - 1;', text1: '        int low = 1, high = i - 1;', anchor: 3 },
     { text: '        while (low <= high) {', anchor: 4 },
     { text: '            int mid = (low + high) / 2;', anchor: 5 },
     { text: '            if (a[mid] <= key) {', descText: '            if (a[mid] >= key) {', anchor: 6 },
@@ -37,9 +37,9 @@ const CODE: CodeBook = {
   cpp: [
     { text: 'void binaryInsertionSort(std::vector<int>& a) {' },
     { text: '    int n = static_cast<int>(a.size());' },
-    { text: '    for (int i = 1; i < n; ++i) {', anchor: 1 },
+    { text: '    for (int i = 1; i < n; ++i) {', text1: '    for (int i = 2; i <= n; ++i) {', anchor: 1 },
     { text: '        int key = a[i];', anchor: 2 },
-    { text: '        int low = 0, high = i - 1;', anchor: 3 },
+    { text: '        int low = 0, high = i - 1;', text1: '        int low = 1, high = i - 1;', anchor: 3 },
     { text: '        while (low <= high) {', anchor: 4 },
     { text: '            int mid = (low + high) / 2;', anchor: 5 },
     { text: '            if (a[mid] <= key) low = mid + 1;', descText: '            if (a[mid] >= key) low = mid + 1;', anchor: 6 },
@@ -53,9 +53,9 @@ const CODE: CodeBook = {
   ],
   java: [
     { text: 'void binaryInsertionSort(int[] a) {' },
-    { text: '    for (int i = 1; i < a.length; i++) {', anchor: 1 },
+    { text: '    for (int i = 1; i < a.length; i++) {', text1: '    for (int i = 2; i <= a.length; i++) {', anchor: 1 },
     { text: '        int key = a[i];', anchor: 2 },
-    { text: '        int low = 0, high = i - 1;', anchor: 3 },
+    { text: '        int low = 0, high = i - 1;', text1: '        int low = 1, high = i - 1;', anchor: 3 },
     { text: '        while (low <= high) {', anchor: 4 },
     { text: '            int mid = (low + high) / 2;', anchor: 5 },
     { text: '            if (a[mid] <= key) {', descText: '            if (a[mid] >= key) {', anchor: 6 },
@@ -74,9 +74,9 @@ const CODE: CodeBook = {
   python: [
     { text: 'def binary_insertion_sort(a):' },
     { text: '    n = len(a)' },
-    { text: '    for i in range(1, n):', anchor: 1 },
+    { text: '    for i in range(1, n):', text1: '    for i in range(2, n + 1):', anchor: 1 },
     { text: '        key = a[i]', anchor: 2 },
-    { text: '        low, high = 0, i - 1', anchor: 3 },
+    { text: '        low, high = 0, i - 1', text1: '        low, high = 1, i - 1', anchor: 3 },
     { text: '        while low <= high:', anchor: 4 },
     { text: '            mid = (low + high) // 2', anchor: 5 },
     { text: '            if a[mid] <= key:', descText: '            if a[mid] >= key:', anchor: 6 },

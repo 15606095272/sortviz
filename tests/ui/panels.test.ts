@@ -148,8 +148,14 @@ describe('真实代码面板', () => {
       { text: 'void f(int a[], int n) {' },
       { text: '    for (int i = 1; i < n; i++) {', anchor: 1 },
       { text: '        int key = a[i];', anchor: 2 },
-      // 这一行随方向变：降序时比较符反向（descText）
-      { text: '        while (j >= 0 && a[j] > key) {', descText: '        while (j >= 0 && a[j] < key) {', anchor: 4 },
+      // 这一行既随方向变（descText）也随下标进制变（text1）：1 基时下界从 0 变 1
+      {
+        text: '        while (j >= 0 && a[j] > key) {',
+        descText: '        while (j >= 0 && a[j] < key) {',
+        text1: '        while (j >= 1 && a[j] > key) {',
+        descText1: '        while (j >= 1 && a[j] < key) {',
+        anchor: 4,
+      },
       { text: '            a[j + 1] = a[j];', anchor: 4 },
       { text: '        }' },
     ],
@@ -176,7 +182,7 @@ describe('真实代码面板', () => {
 
   it('renderCode 传 desc：命中的行显示 descText', () => {
     const host = document.createElement('div');
-    renderCode(host, BOOK, 'c', 4, 'desc');
+    renderCode(host, BOOK, 'c', 4, { order: 'desc', base: 0 });
     const hl = [...host.querySelectorAll('.ln.hl')];
     expect(hl).toHaveLength(2);
     expect(hl[0].textContent).toContain('while (j >= 0 && a[j] < key)');
@@ -188,7 +194,7 @@ describe('真实代码面板', () => {
 
   it('renderCode 传 asc（或不传）时显示 text', () => {
     const asc = document.createElement('div');
-    renderCode(asc, BOOK, 'c', 4, 'asc');
+    renderCode(asc, BOOK, 'c', 4, { order: 'asc', base: 0 });
     const dflt = document.createElement('div');
     renderCode(dflt, BOOK, 'c', 4);
     for (const host of [asc, dflt]) {
@@ -196,6 +202,26 @@ describe('真实代码面板', () => {
       expect(host.textContent).not.toContain('a[j] < key');
     }
     expect(asc.textContent).toBe(dflt.textContent);
+  });
+
+  it('renderCode 传 1 基：命中的行显示 text1（下标口径跟着变）', () => {
+    const host = document.createElement('div');
+    renderCode(host, BOOK, 'c', 4, { order: 'asc', base: 1 });
+    const hl = [...host.querySelectorAll('.ln.hl')];
+    expect(hl).toHaveLength(2);
+    expect(hl[0].textContent).toContain('while (j >= 1 && a[j] > key)');
+    expect(host.textContent).not.toContain('j >= 0');
+    // 没声明 text1 的行照抄原文
+    expect(hl[1].textContent).toContain('a[j + 1] = a[j];');
+  });
+
+  it('renderCode 传 1 基·降序：优先 descText1（既换进制又反方向）', () => {
+    const host = document.createElement('div');
+    renderCode(host, BOOK, 'c', 4, { order: 'desc', base: 1 });
+    const hl = [...host.querySelectorAll('.ln.hl')];
+    expect(hl[0].textContent).toContain('while (j >= 1 && a[j] < key)');
+    expect(host.textContent).not.toContain('a[j] > key');
+    expect(host.textContent).not.toContain('j >= 0');
   });
 
   it('renderCode 在 codeLine 为 undefined 时不加任何 hl', () => {

@@ -13,9 +13,9 @@ const PSEUDO = [
 const CODE: CodeBook = {
   c: [
     { text: 'void bubbleSort(int a[], int n) {' },
-    { text: '    for (int i = 0; i < n - 1; i++) {', anchor: 1 },
+    { text: '    for (int i = 0; i < n - 1; i++) {', text1: '    for (int i = 1; i <= n - 1; i++) {', anchor: 1 },
     { text: '        int swapped = 0;', anchor: 2 },
-    { text: '        for (int j = 0; j < n - 1 - i; j++) {', anchor: 3 },
+    { text: '        for (int j = 0; j < n - 1 - i; j++) {', text1: '        for (int j = 1; j <= n - i; j++) {', anchor: 3 },
     { text: '            if (a[j] > a[j + 1]) {', descText: '            if (a[j] < a[j + 1]) {', anchor: 4 },
     { text: '                int t = a[j];', anchor: 5 },
     { text: '                a[j] = a[j + 1];', anchor: 5 },
@@ -30,9 +30,9 @@ const CODE: CodeBook = {
   cpp: [
     { text: 'void bubbleSort(std::vector<int>& a) {' },
     { text: '    int n = static_cast<int>(a.size());' },
-    { text: '    for (int i = 0; i < n - 1; ++i) {', anchor: 1 },
+    { text: '    for (int i = 0; i < n - 1; ++i) {', text1: '    for (int i = 1; i <= n - 1; ++i) {', anchor: 1 },
     { text: '        bool swapped = false;', anchor: 2 },
-    { text: '        for (int j = 0; j < n - 1 - i; ++j) {', anchor: 3 },
+    { text: '        for (int j = 0; j < n - 1 - i; ++j) {', text1: '        for (int j = 1; j <= n - i; ++j) {', anchor: 3 },
     { text: '            if (a[j] > a[j + 1]) {', descText: '            if (a[j] < a[j + 1]) {', anchor: 4 },
     { text: '                std::swap(a[j], a[j + 1]);', anchor: 5 },
     { text: '                swapped = true;', anchor: 5 },
@@ -45,9 +45,9 @@ const CODE: CodeBook = {
   java: [
     { text: 'void bubbleSort(int[] a) {' },
     { text: '    int n = a.length;' },
-    { text: '    for (int i = 0; i < n - 1; i++) {', anchor: 1 },
+    { text: '    for (int i = 0; i < n - 1; i++) {', text1: '    for (int i = 1; i <= n - 1; i++) {', anchor: 1 },
     { text: '        boolean swapped = false;', anchor: 2 },
-    { text: '        for (int j = 0; j < n - 1 - i; j++) {', anchor: 3 },
+    { text: '        for (int j = 0; j < n - 1 - i; j++) {', text1: '        for (int j = 1; j <= n - i; j++) {', anchor: 3 },
     { text: '            if (a[j] > a[j + 1]) {', descText: '            if (a[j] < a[j + 1]) {', anchor: 4 },
     { text: '                int t = a[j];', anchor: 5 },
     { text: '                a[j] = a[j + 1];', anchor: 5 },
@@ -62,9 +62,9 @@ const CODE: CodeBook = {
   python: [
     { text: 'def bubble_sort(a):' },
     { text: '    n = len(a)' },
-    { text: '    for i in range(n - 1):', anchor: 1 },
+    { text: '    for i in range(n - 1):', text1: '    for i in range(1, n):', anchor: 1 },
     { text: '        swapped = False', anchor: 2 },
-    { text: '        for j in range(n - 1 - i):', anchor: 3 },
+    { text: '        for j in range(n - 1 - i):', text1: '        for j in range(1, n - i):', anchor: 3 },
     { text: '            if a[j] > a[j + 1]:', descText: '            if a[j] < a[j + 1]:', anchor: 4 },
     { text: '                a[j], a[j + 1] = a[j + 1], a[j]', anchor: 5 },
     { text: '                swapped = True', anchor: 5 },
