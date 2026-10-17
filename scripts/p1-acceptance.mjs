@@ -172,6 +172,7 @@ await js(`(() => {
 })()`);
 await sleep(250);
 const varsAt0 = await js(`[...document.querySelectorAll('.stats.vars .stat')].map(s => s.textContent).join(' | ')`);
+const codeAt0 = await js(`[...document.querySelectorAll('.ln')].map(n => n.textContent).join('\\n')`);
 const idx0 = await js(`[...document.querySelectorAll('.idxnum')].slice(0, 3).map(n => n.textContent).join(',')`);
 await js(`(() => { const c = [...document.querySelectorAll('.indexbase .chip')].find(x => x.textContent === '1 基'); if (!c) return 'no-chip'; c.click(); return 1; })()`);
 await sleep(250);
@@ -182,7 +183,17 @@ check(/^1,2,3$/.test(idx1), '切 1 基后下标从 1 开始', idx1);
 console.log(`  变量面板 0 基: ${varsAt0}`);
 console.log(`  变量面板 1 基: ${varsAt1}`);
 check(varsAt0 !== varsAt1, '变量面板里的索引类变量随进制换算', `${varsAt0} → ${varsAt1}`);
+// 代码必须跟下标进制对上（不是只有数组视图和说明文字换）
+const codeAt1 = await js(`[...document.querySelectorAll('.ln')].map(n => n.textContent).join('\\n')`);
+check(String(codeAt0) !== String(codeAt1), '切 1 基后代码面板也跟着换（下标对上）', String(codeAt0) === String(codeAt1) ? '未变化（错）' : '已变化');
+const hint1 = await js(`document.querySelector('.codehint')?.textContent ?? ''`);
+check(/1 基/.test(String(hint1)), '1 基下代码卡显示口径提示', String(hint1).slice(0, 40) || '无提示');
 await js(`(() => { const c = [...document.querySelectorAll('.indexbase .chip')].find(x => x.textContent === '0 基'); if (c) c.click(); return 1; })()`);
+await sleep(250);
+const codeBack0 = await js(`[...document.querySelectorAll('.ln')].map(n => n.textContent).join('\\n')`);
+check(String(codeBack0) === String(codeAt0), '切回 0 基后代码恢复 0 基写法', String(codeBack0) === String(codeAt0) ? '恢复' : '未恢复');
+const hintBack = await js(`document.querySelector('.codehint')?.textContent ?? ''`);
+check(!/1 基/.test(String(hintBack)), '切回 0 基后口径提示消失', JSON.stringify(String(hintBack)));
 
 // —— P2：主视图切换 / 主题 / 快捷键 / 窄屏 ——
 console.log('\n=== P2 功能 ===');
