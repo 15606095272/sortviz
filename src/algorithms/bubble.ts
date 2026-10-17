@@ -29,7 +29,7 @@ const CODE: CodeBook = {
   ],
   cpp: [
     { text: 'void bubbleSort(std::vector<int>& a) {' },
-    { text: '    int n = static_cast<int>(a.size());' },
+    { text: '    int n = static_cast<int>(a.size());', text1: '    int n = static_cast<int>(a.size()) - 1;' },
     { text: '    for (int i = 0; i < n - 1; ++i) {', text1: '    for (int i = 1; i <= n - 1; ++i) {', anchor: 1 },
     { text: '        bool swapped = false;', anchor: 2 },
     { text: '        for (int j = 0; j < n - 1 - i; ++j) {', text1: '        for (int j = 1; j <= n - i; ++j) {', anchor: 3 },

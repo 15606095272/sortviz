@@ -34,7 +34,7 @@ const CODE: CodeBook = {
   ],
   cpp: [
     { text: 'void shellSort(std::vector<int>& a) {' },
-    { text: '    int n = static_cast<int>(a.size());' },
+    { text: '    int n = static_cast<int>(a.size());', text1: '    int n = static_cast<int>(a.size()) - 1;' },
     { text: '    for (int gap = n / 2; gap > 0; gap /= 2) {', anchor: 1 },
     { text: '        for (int k = gap; k < n; ++k) {', text1: '        for (int k = gap + 1; k <= n; ++k) {', anchor: 2 },
     { text: '            int key = a[k];', anchor: 3 },

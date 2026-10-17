@@ -10,7 +10,8 @@
     "build:single": "vite build --config vite.config.single.ts && node scripts/inline-single.mjs",
     "preview": "vite preview",
     "test": "vitest run --passWithNoTests",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "verify:code": "VERIFY_ALL_LANGS=1 vitest run tests/algorithms/code-executes.test.ts"
   },
   "keywords": [],
   "author": "",

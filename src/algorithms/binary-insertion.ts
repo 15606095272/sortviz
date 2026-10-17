@@ -36,7 +36,7 @@ const CODE: CodeBook = {
   ],
   cpp: [
     { text: 'void binaryInsertionSort(std::vector<int>& a) {' },
-    { text: '    int n = static_cast<int>(a.size());' },
+    { text: '    int n = static_cast<int>(a.size());', text1: '    int n = static_cast<int>(a.size()) - 1;' },
     { text: '    for (int i = 1; i < n; ++i) {', text1: '    for (int i = 2; i <= n; ++i) {', anchor: 1 },
     { text: '        int key = a[i];', anchor: 2 },
     { text: '        int low = 0, high = i - 1;', text1: '        int low = 1, high = i - 1;', anchor: 3 },
