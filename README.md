@@ -4,6 +4,18 @@
 
 为 408 数据结构复习而做，同时是一个工程完整的作品集项目：TypeScript + 单元测试 + 零运行时依赖 + 插件式算法注册。
 
+## 效果图
+
+| 快排 · Java 代码面板 | 堆排 · 深色主题 + 真正的二叉树 |
+|---|---|
+| ![快排 Java](assets/screenshots/01-quick-java-code.png) | ![深色堆树](assets/screenshots/02-heap-tree-dark-python.png) |
+
+| 堆排 · 降序（小顶堆，`buildMinHeap`） | 堆排 · 1 基 + 降序（`a[1]`、`2*root`） |
+|---|---|
+| ![降序小顶堆](assets/screenshots/03-heap-desc-minheap.png) | ![1基降序](assets/screenshots/04-heap-1based-desc.png) |
+
+代码面板随**排序方向**和**下标进制**同步切换：升序 `a[j] > key` / 降序 `a[j] < key`；0 基 `for (i = 1; i < n; i++)` / 1 基 `for (i = 2; i <= n; i++)`，1 基时数据在 `a[1..n]`（教材口径）。
+
 ## 快速开始
 
 ```bash
