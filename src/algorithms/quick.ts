@@ -42,6 +42,7 @@ const CODE: CodeBook = {
     { text: '    a[i] = t;', anchor: 11 },
     { text: '    return i;', anchor: 12 },
     { text: '}' },
+    { text: '// call: quickSort(a, 0, n - 1);', text1: '// call: quickSort(a, 1, n);' },
   ],
   cpp: [
     { text: 'void quickSort(std::vector<int>& a, int low, int high) {', anchor: 1 },
@@ -64,6 +65,7 @@ const CODE: CodeBook = {
     { text: '    std::swap(a[low], a[i]);', anchor: 11 },
     { text: '    return i;', anchor: 12 },
     { text: '}' },
+    { text: '// call: quickSort(a, 0, (int)a.size() - 1);', text1: '// call: quickSort(a, 1, (int)a.size() - 1);' },
   ],
   java: [
     { text: 'void quickSort(int[] a, int low, int high) {', anchor: 1 },
@@ -90,6 +92,7 @@ const CODE: CodeBook = {
     { text: '    a[i] = t;', anchor: 11 },
     { text: '    return i;', anchor: 12 },
     { text: '}' },
+    { text: '// call: quickSort(a, 0, a.length - 1);', text1: '// call: quickSort(a, 1, a.length - 1);' },
   ],
   python: [
     { text: 'def quick_sort(a, low, high):', anchor: 1 },
@@ -107,6 +110,7 @@ const CODE: CodeBook = {
     { text: '            a[i], a[j] = a[j], a[i]', anchor: 10 },
     { text: '    a[low], a[i] = a[i], a[low]', anchor: 11 },
     { text: '    return i', anchor: 12 },
+    { text: '# call: quick_sort(a, 0, len(a) - 1)', text1: '# call: quick_sort(a, 1, len(a) - 1)' },
   ],
 };
 

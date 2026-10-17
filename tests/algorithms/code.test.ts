@@ -132,10 +132,20 @@ describe('真实代码：随排序方向变化', () => {
 });
 
 /**
- * 已经补上「1 基代码」的模块（本批先做 4 个简单模块；其它模块迁移时把 id 加进来）。
+ * 已经补上「1 基代码」的模块（9 个：本批把快排/选择/归并/基数/折半查找也纳入；堆留下一步）。
  * 三条规则对 BASE_MODULES 全量生效——未迁移的模块加进白名单会立刻变红，这是护栏的本意。
  */
-const BASE_MODULES = ['insertion', 'binary-insertion', 'shell', 'bubble'];
+const BASE_MODULES = [
+  'insertion',
+  'binary-insertion',
+  'shell',
+  'bubble',
+  'quick',
+  'selection',
+  'merge',
+  'radix',
+  'binary-search',
+];
 
 /** 四种组合的渲染结果（整块代码文本），用于「两两不同」的判定 */
 const VIEWS = [

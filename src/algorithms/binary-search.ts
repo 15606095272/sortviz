@@ -16,8 +16,8 @@ const PSEUDO = [
 const CODE: CodeBook = {
   c: [
     { text: 'int binarySearch(int a[], int n, int target) {', anchor: 1 },
-    { text: '    int low = 0;', anchor: 2 },
-    { text: '    int high = n - 1;', anchor: 2 },
+    { text: '    int low = 0;', text1: '    int low = 1;', anchor: 2 },
+    { text: '    int high = n - 1;', text1: '    int high = n;', anchor: 2 },
     { text: '    while (low <= high) {', anchor: 3 },
     { text: '        int mid = (low + high) / 2;', anchor: 4 },
     { text: '        if (a[mid] == target) {', anchor: 5 },
@@ -33,7 +33,7 @@ const CODE: CodeBook = {
   ],
   cpp: [
     { text: 'int binarySearch(const std::vector<int>& a, int target) {', anchor: 1 },
-    { text: '    int low = 0;', anchor: 2 },
+    { text: '    int low = 0;', text1: '    int low = 1;', anchor: 2 },
     { text: '    int high = static_cast<int>(a.size()) - 1;', anchor: 2 },
     { text: '    while (low <= high) {', anchor: 3 },
     { text: '        int mid = low + (high - low) / 2;', anchor: 4 },
@@ -50,7 +50,7 @@ const CODE: CodeBook = {
   ],
   java: [
     { text: 'int binarySearch(int[] a, int target) {', anchor: 1 },
-    { text: '    int low = 0;', anchor: 2 },
+    { text: '    int low = 0;', text1: '    int low = 1;', anchor: 2 },
     { text: '    int high = a.length - 1;', anchor: 2 },
     { text: '    while (low <= high) {', anchor: 3 },
     { text: '        int mid = (low + high) / 2;', anchor: 4 },
@@ -67,7 +67,7 @@ const CODE: CodeBook = {
   ],
   python: [
     { text: 'def binary_search(a, target):', anchor: 1 },
-    { text: '    low = 0', anchor: 2 },
+    { text: '    low = 0', text1: '    low = 1', anchor: 2 },
     { text: '    high = len(a) - 1', anchor: 2 },
     { text: '    while low <= high:', anchor: 3 },
     { text: '        mid = (low + high) // 2', anchor: 4 },
