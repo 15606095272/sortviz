@@ -56,7 +56,7 @@ const CODE: CodeBook = {
   ],
   java: [
     { text: 'void shellSort(int[] a) {' },
-    { text: '    int n = a.length;' },
+    { text: '    int n = a.length;', text1: '    int n = a.length - 1;' },
     { text: '    for (int gap = n / 2; gap > 0; gap /= 2) {', anchor: 1 },
     { text: '        for (int k = gap; k < n; k++) {', text1: '        for (int k = gap + 1; k <= n; k++) {', anchor: 2 },
     { text: '            int key = a[k];', anchor: 3 },

@@ -53,7 +53,7 @@ const CODE: CodeBook = {
   ],
   java: [
     { text: 'void binaryInsertionSort(int[] a) {' },
-    { text: '    for (int i = 1; i < a.length; i++) {', text1: '    for (int i = 2; i <= a.length; i++) {', anchor: 1 },
+    { text: '    for (int i = 1; i < a.length; i++) {', text1: '    for (int i = 2; i <= a.length - 1; i++) {', anchor: 1 },
     { text: '        int key = a[i];', anchor: 2 },
     { text: '        int low = 0, high = i - 1;', text1: '        int low = 1, high = i - 1;', anchor: 3 },
     { text: '        while (low <= high) {', anchor: 4 },
