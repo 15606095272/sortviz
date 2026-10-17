@@ -1,5 +1,8 @@
 {
   "name": "sortviz",
+  "engines": {
+    "node": ">=22.19.0"
+  },
   "version": "0.1.0",
   "description": "排序可视化实验室",
   "private": true,
