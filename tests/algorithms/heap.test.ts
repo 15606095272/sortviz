@@ -52,4 +52,31 @@ describe('堆排序', () => {
     expect(last.data).toEqual(SORTED);
     expect(last.sorted.size).toBe(INPUT.length);
   });
+
+  it('建初堆下标起点的口径：0 基下最后一个非叶结点是 n/2-1，任意 n 都得到合法大顶堆', () => {
+    // 教材（王道/严蔚敏）是 1 基写法 `for (i = len/2; i >= 1; i--)`：结点 i 的孩子是 2i、2i+1，
+    // 孩子存在 ⟺ 2i <= n ⟺ i <= n/2 → 最后一个非叶是 floor(n/2)。
+    // 真实语言是 0 基：孩子是 2i+1、2i+2，孩子存在 ⟺ 2i+1 <= n-1 ⟺ i <= (n-2)/2
+    // → 最后一个非叶是 floor(n/2)-1。1 基的 n/2 搬到 0 基就是"从叶子起跑"，只会空转一轮。
+    const isLeaf = (i: number, n: number) => 2 * i + 1 >= n;
+    for (const n of [1, 2, 3, 4, 7, 8, 9, 13]) {
+      const data = Array.from({ length: n }, (_, i) => ((i * 37 + 11) % 97) + 1);
+      const steps = heap.run(data, { order: 'asc' });
+      const at = steps.findIndex((s) => s.kind === 'note' && String(s.note).includes('建初堆'));
+      const built = replay(data, steps, at + 1).data;
+      // 大顶堆性质：每个结点都不小于其孩子
+      const heapOk = built.every((v, i) => {
+        const l = 2 * i + 1;
+        const r = 2 * i + 2;
+        return (l >= n || v >= built[l]) && (r >= n || v >= built[r]);
+      });
+      expect(heapOk, `n=${n} 建初堆后不满足大顶堆：${built.join(',')}`).toBe(true);
+      if (n >= 2) {
+        expect(isLeaf(Math.floor(n / 2) - 1, n), `n=${n}：n/2-1 必须是有孩子的结点`).toBe(false);
+        expect(isLeaf(Math.floor(n / 2), n), `n=${n}：n/2 在 0 基下是叶子，从它起只会空转`).toBe(true);
+      }
+    }
+    // n=1：n/2-1 = -1，循环一次不进，单个元素天然是堆
+    expect(replay([42], heap.run([42], { order: 'asc' }), 1).data).toEqual([42]);
+  });
 });
