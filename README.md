@@ -171,6 +171,8 @@ npm test
 
 稳定性断言是可证伪的：例如插入/折半插入用 `[49,49,38]` 的移动数锁定「等值插到右侧」，归并用「等值取左段」，基数用「个位相同的 97 仍排在 27 之前」。
 
+真实代码可执行性：把面板里的 Python 代码在四种口径下真跑一遍（升序/降序 × 0基/1基），结果必须与黄金夹具一致（无 python3 的环境自动跳过）——即 `tests/algorithms/code-executes.test.ts`，用 `child_process.spawnSync('python3', …)` 逐模块执行面板源码，9 个排序比对最终数组、折半查找比对返回下标（0 基 3 / 1 基 4）。
+
 另有一个浏览器交互冒烟脚本 `scripts/interaction-smoke.mjs`（零依赖，用 CDP 真点页面：播放推进/暂停/单步/回开头/切算法/代码面板与结构视图联动/非法输入/换数据），改动 UI 后可跑一遍确认「页面不是静态的」。用法见脚本头部注释。
 
 单文件构建由 `scripts/inline-single.mjs` 完成（`npm run build:single` 调用它把 JS/CSS 内联进 `dist-single/sortviz.html`），配合 `vite.config.single.ts` 使用，详见「快速开始 → 本地使用」。

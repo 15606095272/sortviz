@@ -77,7 +77,7 @@ const CODE: CodeBook = {
   ],
   python: [
     { text: 'def insertion_sort(a):' },
-    { text: '    for i in range(1, len(a)):', text1: '    for i in range(2, len(a) + 1):', anchor: 1 },
+    { text: '    for i in range(1, len(a)):', text1: '    for i in range(2, len(a)):', anchor: 1 },
     { text: '        key = a[i]', anchor: 2 },
     { text: '        j = i - 1', anchor: 3 },
     {

@@ -78,7 +78,7 @@ const CODE: CodeBook = {
   ],
   python: [
     { text: 'def shell_sort(a):' },
-    { text: '    n = len(a)' },
+    { text: '    n = len(a)', text1: '    n = len(a) - 1' },
     { text: '    gap = n // 2' },
     { text: '    while gap > 0:', anchor: 1 },
     { text: '        for k in range(gap, n):', text1: '        for k in range(gap + 1, n + 1):', anchor: 2 },

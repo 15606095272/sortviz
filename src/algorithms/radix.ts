@@ -117,7 +117,7 @@ const CODE: CodeBook = {
   ],
   python: [
     { text: 'def max_digits(a):', anchor: 2 },
-    { text: '    max_value = max(abs(v) for v in a)' },
+    { text: '    max_value = max(abs(v) for v in a)', text1: '    max_value = max(abs(v) for v in a[1:])' },
     { text: '    digits = 1' },
     { text: '    while max_value >= 10:' },
     { text: '        digits += 1' },

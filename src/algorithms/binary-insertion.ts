@@ -73,7 +73,7 @@ const CODE: CodeBook = {
   ],
   python: [
     { text: 'def binary_insertion_sort(a):' },
-    { text: '    n = len(a)' },
+    { text: '    n = len(a)', text1: '    n = len(a) - 1' },
     { text: '    for i in range(1, n):', text1: '    for i in range(2, n + 1):', anchor: 1 },
     { text: '        key = a[i]', anchor: 2 },
     { text: '        low, high = 0, i - 1', text1: '        low, high = 1, i - 1', anchor: 3 },
